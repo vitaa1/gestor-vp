@@ -1,9 +1,39 @@
-<main>
-  <section aria-labelledby="page-title">
-    <p class="eyebrow">Vence Fácil</p>
-    <h1 id="page-title">Base do projeto pronta</h1>
-    <p>Controle de validade sem complicação.</p>
-  </section>
-</main>
+@if (!authService.authenticated()) {
+  <app-login (loggedIn)="loadEntries()" />
+} @else {
+  <header>
+    <div class="header-content">
+      <a class="brand" href="#top" aria-label="Vence Fácil — início">
+        <span aria-hidden="true">VF</span>
+        <strong>Vence Fácil</strong>
+      </a>
+      <div class="header-actions">
+        <p>Controle de validade sem complicação.</p>
+        <button type="button" (click)="logout()">Sair</button>
+      </div>
+    </div>
+  </header>
 
-<router-outlet />
+  <main id="top">
+    <section class="hero" aria-labelledby="page-title">
+      <p class="eyebrow">Seu estoque em ordem</p>
+      <h1 id="page-title">O que vence primeiro aparece primeiro.</h1>
+      <p>Cadastre uma mercadoria e veja rapidamente o que precisa da sua atenção.</p>
+    </section>
+
+    <app-stock-entry-form
+      [creationDisabled]="loading() || loadingMore()"
+      (entryCreated)="addCreatedEntry($event)"
+    />
+
+    <app-stock-entry-list
+      [entries]="entries()"
+      [loading]="loading()"
+      [loadingMore]="loadingMore()"
+      [hasMore]="hasMore()"
+      [errorMessage]="errorMessage()"
+      (retryRequested)="loadEntries()"
+      (loadMoreRequested)="loadMore()"
+    />
+  </main>
+}

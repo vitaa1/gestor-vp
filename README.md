@@ -43,6 +43,7 @@ O escopo detalhado está em [docs/produto.md](docs/produto.md).
 - Spring Boot 4.1
 - Spring Data JPA
 - PostgreSQL e Flyway
+- Spring Security
 - Actuator
 - JUnit e Testcontainers
 
@@ -61,8 +62,8 @@ O escopo detalhado está em [docs/produto.md](docs/produto.md).
 - GitHub Actions
 - OpenAPI/Swagger
 
-Spring Security, Angular Material, PWA e OpenAPI serão adicionados quando o
-fluxo funcional que realmente os utiliza for implementado.
+Angular Material, PWA e OpenAPI serão adicionados quando o fluxo funcional que
+realmente os utiliza for implementado.
 
 ## Estrutura do repositório
 
@@ -77,8 +78,8 @@ vence-facil/
 
 ## Status
 
-🚧 Em desenvolvimento — base técnica executável e primeiro fluxo funcional em
-preparação.
+🚧 Em desenvolvimento — base técnica executável e primeiro fluxo funcional de
+cadastro e consulta do estoque implementado.
 
 ## Executar localmente
 
@@ -116,14 +117,16 @@ Para personalizar o PostgreSQL executado pelo Docker Compose, copie
 `.env.example` para `.env`. O arquivo `.env` não deve ser versionado.
 
 O Spring Boot não carrega esse arquivo automaticamente. Antes de iniciar a API,
-defina `DB_URL`, `DB_USERNAME`, `DB_PASSWORD` e `SERVER_PORT` no terminal que
-executará o Maven. Por exemplo, no PowerShell:
+defina `DB_URL`, `DB_USERNAME`, `DB_PASSWORD`, `SERVER_PORT`, `APP_USERNAME` e
+`APP_PASSWORD` no terminal que executará o Maven. Por exemplo, no PowerShell:
 
 ```powershell
 $env:DB_URL = "jdbc:postgresql://localhost:5432/vence_facil"
 $env:DB_USERNAME = "vence_facil"
 $env:DB_PASSWORD = "vence_facil_local"
 $env:SERVER_PORT = "8080"
+$env:APP_USERNAME = "operador"
+$env:APP_PASSWORD = "troque-esta-senha-local"
 
 cd backend
 .\mvnw.cmd spring-boot:run
@@ -147,8 +150,8 @@ Toda alteração é desenvolvida em uma branch isolada e integrada à `main` por
 Pull Request depois da revisão e da aprovação do pipeline. As convenções de
 branches, commits e merge estão em [CONTRIBUTING.md](CONTRIBUTING.md).
 
-## Próximo incremento
+## Primeiro fluxo funcional
 
-O primeiro fluxo vertical será:
+O fluxo vertical disponível é:
 
 > Cadastrar uma entrada de produto e exibi-la na lista em ordem de validade.

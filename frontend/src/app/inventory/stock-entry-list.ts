@@ -1,0 +1,38 @@
+import { Component, input, output } from '@angular/core';
+import { StockEntry } from './stock-entry.model';
+
+@Component({
+  selector: 'app-stock-entry-list',
+  templateUrl: './stock-entry-list.html',
+  styleUrl: './stock-entry-list.scss',
+})
+export class StockEntryList {
+  readonly entries = input<readonly StockEntry[]>([]);
+  readonly loading = input(false);
+  readonly errorMessage = input('');
+  readonly hasMore = input(false);
+  readonly loadingMore = input(false);
+  readonly retryRequested = output<void>();
+  readonly loadMoreRequested = output<void>();
+
+  formatDate(value: string): string {
+    const [year, month, day] = value.split('-');
+    return `${day}/${month}/${year}`;
+  }
+
+  expirationMessage(entry: StockEntry): string {
+    if (entry.daysUntilExpiration < -1) {
+      return `Venceu há ${Math.abs(entry.daysUntilExpiration)} dias`;
+    }
+    if (entry.daysUntilExpiration === -1) {
+      return 'Venceu ontem';
+    }
+    if (entry.daysUntilExpiration === 0) {
+      return 'Vence hoje';
+    }
+    if (entry.daysUntilExpiration === 1) {
+      return 'Vence amanhã';
+    }
+    return `Vence em ${entry.daysUntilExpiration} dias`;
+  }
+}

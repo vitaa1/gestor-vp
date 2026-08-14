@@ -1,0 +1,66 @@
+<section class="form-card" aria-labelledby="add-product-title">
+  <div class="section-heading">
+    <p class="eyebrow">Cadastro rápido</p>
+    <h2 id="add-product-title">Adicionar produto</h2>
+    <p>Informe apenas o essencial. Leva menos de um minuto.</p>
+  </div>
+
+  <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+    <div class="field field--wide">
+      <label for="product-name">Nome do produto</label>
+      <input
+        id="product-name"
+        type="text"
+        formControlName="productName"
+        maxlength="120"
+        autocomplete="off"
+        placeholder="Ex.: Leite Integral"
+      />
+      @if (form.controls.productName.touched && form.controls.productName.hasError('required')) {
+        <p class="field-error">Informe o nome do produto.</p>
+      }
+      @if (form.controls.productName.touched && form.controls.productName.hasError('pattern')) {
+        <p class="field-error">O nome não pode conter apenas espaços.</p>
+      }
+      @if (form.controls.productName.touched && form.controls.productName.hasError('maxlength')) {
+        <p class="field-error">Use no máximo 120 caracteres.</p>
+      }
+    </div>
+
+    <div class="field">
+      <label for="quantity">Quantidade</label>
+      <input
+        id="quantity"
+        type="number"
+        formControlName="quantity"
+        min="1"
+        max="2147483647"
+        inputmode="numeric"
+      />
+      @if (form.controls.quantity.touched && form.controls.quantity.invalid) {
+        <p class="field-error">Informe uma quantidade inteira maior que zero.</p>
+      }
+    </div>
+
+    <div class="field">
+      <label for="expiration-date">Data de validade</label>
+      <input id="expiration-date" type="date" formControlName="expirationDate" />
+      @if (form.controls.expirationDate.touched && form.controls.expirationDate.invalid) {
+        <p class="field-error">Informe a data de validade.</p>
+      }
+    </div>
+
+    <button type="submit" [disabled]="submitting() || creationDisabled()">
+      {{ submitting() ? 'Adicionando…' : 'Adicionar produto' }}
+    </button>
+  </form>
+
+  <div class="feedback" aria-live="polite">
+    @if (successMessage()) {
+      <p class="feedback__success">{{ successMessage() }}</p>
+    }
+    @if (errorMessage()) {
+      <p class="feedback__error">{{ errorMessage() }}</p>
+    }
+  </div>
+</section>

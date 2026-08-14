@@ -1,3 +1,14 @@
+:root {
+  --color-primary: #287548;
+  --color-primary-strong: #1f603a;
+  --color-ink: #173d29;
+  --color-muted: #53675b;
+  --color-danger: #b42318;
+  --color-border: #d9e5dd;
+  --color-surface: #ffffff;
+  --shadow-card: 0 1rem 3rem rgb(30 66 45 / 8%);
+}
+
 *,
 *::before,
 *::after {
@@ -18,4 +29,13 @@ html {
 
 body {
   margin: 0;
+  min-width: 20rem;
+  min-height: 100dvh;
+  background:
+    radial-gradient(circle at 100% 0%, rgb(190 224 200 / 40%), transparent 30rem), #f4f8f5;
+}
+
+button,
+input {
+  font: inherit;
 }
