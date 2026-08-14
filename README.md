@@ -60,10 +60,9 @@ O escopo detalhado está em [docs/produto.md](docs/produto.md).
 
 - Docker Compose
 - GitHub Actions
-- OpenAPI/Swagger
 
-Angular Material, PWA e OpenAPI serão adicionados quando o fluxo funcional que
-realmente os utiliza for implementado.
+Angular Material, PWA e OpenAPI não são requisitos do MVP. Essas tecnologias
+serão reavaliadas somente quando trouxerem benefício concreto ao produto.
 
 ## Estrutura do repositório
 

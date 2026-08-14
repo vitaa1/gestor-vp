@@ -93,11 +93,11 @@ Campos obrigatórios:
 
 Campos opcionais em **Mais detalhes**:
 
-- código de barras;
-- categoria;
-- preço de custo;
-- fornecedor;
-- número do lote.
+- código de barras numérico de 8 a 14 dígitos, único por produto;
+- categoria textual do produto;
+- preço de custo unitário em reais;
+- fornecedor textual da entrada;
+- número do lote textual da entrada, sem unicidade global.
 
 ### Consultar produtos
 
@@ -122,9 +122,11 @@ O usuário informa a quantidade e um motivo:
 - vendi;
 - usei;
 - doei;
-- perdi ou venceu.
+- perdi;
+- venceu.
 
-A quantidade disponível é atualizada e a operação permanece no histórico.
+A retirada parte de uma entrada identificada pelo produto e pela validade. A
+quantidade disponível é atualizada e a operação permanece no histórico.
 
 ### Histórico
 
@@ -145,6 +147,16 @@ quantidade, data e motivo quando aplicável.
 10. Toda entrada e retirada é registrada no histórico.
 11. Cores são acompanhadas de textos ou ícones.
 12. Uma retirada exibe um resumo antes da confirmação.
+13. Uma retirada é aplicada integralmente ou rejeitada, sem atualização
+    parcial quando o saldo é insuficiente.
+14. Entradas vencidas não podem ser retiradas pelos motivos **Vendi** ou
+    **Doei**.
+15. A busca por nome ignora maiúsculas, minúsculas, acentos e espaços
+    excedentes.
+16. O nome normalizado é único; o código de barras também é único quando
+    informado.
+17. Entradas encerradas permanecem disponíveis no histórico em modo somente
+    leitura.
 
 ## 7. Histórias de usuário
 
@@ -196,6 +208,8 @@ Critérios de aceitação:
 - a nova quantidade aparece imediatamente;
 - a operação fica no histórico;
 - é possível cancelar antes da confirmação.
+- a retirada atua sobre a entrada escolhida pelo produto e pela validade;
+- entradas vencidas aceitam apenas os motivos **Perdi** ou **Venceu**.
 
 ### HU05 — Consultar histórico
 
@@ -220,7 +234,8 @@ Critérios de aceitação:
 
 A navegação principal possui no máximo três opções visíveis: **Início**,
 **Produtos** e **Histórico**. O botão **Adicionar produto** permanece em
-destaque.
+destaque. A tela inicial apresenta contagens de entradas e os quatro grupos de
+urgência; no celular, **Tudo certo** pode começar recolhido.
 
 ## 9. Fora do MVP
 
@@ -235,6 +250,11 @@ destaque.
 - emissão de nota fiscal;
 - controle de vendas ou fluxo de caixa;
 - aplicativo móvel nativo.
+- edição ou exclusão de produtos, entradas e movimentações;
+- correção retroativa de estoque;
+- adoção de OpenAPI/Swagger;
+- adoção de Angular Material;
+- transformação da aplicação em PWA.
 
 Esses itens somente serão considerados após o fluxo principal estar completo,
 testado e publicado.
@@ -244,10 +264,8 @@ testado e publicado.
 ### Frontend
 
 - Angular e TypeScript;
-- Angular Material;
 - formulários reativos;
-- layout responsivo;
-- PWA.
+- layout responsivo e mobile-first.
 
 ### Backend
 
@@ -255,8 +273,7 @@ testado e publicado.
 - Spring Web;
 - Spring Data JPA;
 - Bean Validation;
-- Spring Security;
-- OpenAPI/Swagger.
+- Spring Security.
 
 ### Dados, infraestrutura e testes
 
@@ -265,7 +282,8 @@ testado e publicado.
 - GitHub Actions;
 - JUnit 5, Mockito e Testcontainers;
 - testes de componentes Angular;
-- Playwright ou Cypress para fluxos ponta a ponta.
+- Playwright para fluxos ponta a ponta com frontend, backend e PostgreSQL
+  reais.
 
 ## 11. Arquitetura
 
@@ -279,22 +297,30 @@ O backend será um **monólito modular**, inicialmente dividido em:
 O MVP será publicado por uma única aplicação Spring Boot e utilizará um único
 banco PostgreSQL.
 
+### Convenções da API
+
+- endpoints das funcionalidades do produto usam o prefixo `/api/v1/**`;
+- endpoints em `/api/**` exigem autenticação;
+- saúde e informações mínimas de build permanecem em `/actuator/health` e
+  `/actuator/info`;
+- migrations são executadas internamente pelo Flyway e não possuem endpoint;
+- uma futura versão incompatível da API recebe um novo prefixo, sem alterar o
+  significado de `/api/v1/**` silenciosamente.
+
 ## 12. Modelo conceitual
 
-### Usuário
+### Operador
 
-- identificador;
-- nome;
-- e-mail;
-- senha protegida;
-- data de criação.
+- uma única identidade por implantação durante o MVP;
+- credenciais configuradas por ambiente e não persistidas no banco;
+- acesso a todo o estoque do estabelecimento representado pela implantação.
 
 ### Produto
 
 - identificador;
-- nome;
+- nome único normalizado;
 - categoria opcional;
-- código de barras opcional;
+- código de barras opcional e único;
 - data de criação.
 
 ### Entrada de estoque
@@ -330,7 +356,14 @@ O MVP estará concluído quando:
 - entradas e retiradas aparecerem no histórico;
 - os fluxos principais possuírem testes automatizados;
 - o projeto puder ser executado localmente com instruções claras;
-- o repositório possuir capturas de tela e credenciais de demonstração.
+- existir uma demonstração publicada com HTTPS e dados restauráveis;
+- o repositório possuir capturas de tela e a credencial intencionalmente
+  pública e exclusiva da demonstração.
+
+O primeiro ambiente remoto utiliza uma única implantação de demonstração. A
+promoção pública no portfólio ocorre somente após HU01–HU05 e os testes ponta a
+ponta estarem concluídos. Esse ambiente contém somente dados sintéticos e
+descartáveis; nenhuma credencial ou dado real pode ser reutilizado nele.
 
 ## 14. Indicadores de simplicidade
 
