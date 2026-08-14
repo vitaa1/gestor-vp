@@ -1,0 +1,39 @@
+:host {
+  display: block;
+  min-height: 100dvh;
+}
+
+main {
+  display: grid;
+  min-height: 100dvh;
+  place-items: center;
+  padding: 1.5rem;
+}
+
+section {
+  width: min(100%, 32rem);
+  padding: 2rem;
+  border: 1px solid #dfe7e2;
+  border-radius: 1rem;
+  background: #ffffff;
+  box-shadow: 0 1rem 3rem rgb(30 66 45 / 8%);
+}
+
+.eyebrow {
+  margin: 0 0 0.5rem;
+  color: #287548;
+  font-weight: 700;
+}
+
+h1 {
+  margin: 0;
+  color: #173d29;
+  font-size: clamp(2rem, 8vw, 3rem);
+  line-height: 1.05;
+}
+
+p:last-child {
+  margin: 1rem 0 0;
+  color: #4f6257;
+  font-size: 1.125rem;
+}
