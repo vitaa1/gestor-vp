@@ -1,0 +1,41 @@
+<main class="login-page">
+  <section class="login-card" aria-labelledby="login-title">
+    <div class="login-card__mark" aria-hidden="true">VF</div>
+    <p class="eyebrow">Vence Fácil</p>
+    <h1 id="login-title">Entre para cuidar do seu estoque</h1>
+    <p class="introduction">Use a conta configurada para este estabelecimento.</p>
+
+    <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+      <div class="field">
+        <label for="username">Usuário</label>
+        <input id="username" type="text" formControlName="username" autocomplete="username" />
+        @if (form.controls.username.touched && form.controls.username.invalid) {
+          <p class="field-error">Informe o usuário.</p>
+        }
+      </div>
+
+      <div class="field">
+        <label for="password">Senha</label>
+        <input
+          id="password"
+          type="password"
+          formControlName="password"
+          autocomplete="current-password"
+        />
+        @if (form.controls.password.touched && form.controls.password.invalid) {
+          <p class="field-error">Informe a senha.</p>
+        }
+      </div>
+
+      <button type="submit" [disabled]="submitting()">
+        {{ submitting() ? 'Entrando…' : 'Entrar' }}
+      </button>
+    </form>
+
+    <div class="feedback" aria-live="polite">
+      @if (errorMessage()) {
+        <p>{{ errorMessage() }}</p>
+      }
+    </div>
+  </section>
+</main>

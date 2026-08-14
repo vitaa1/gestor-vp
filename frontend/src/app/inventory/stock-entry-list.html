@@ -1,0 +1,67 @@
+<section aria-labelledby="stock-title">
+  <div class="list-heading">
+    <div>
+      <p class="eyebrow">Por ordem de validade</p>
+      <h2 id="stock-title">Produtos no estoque</h2>
+    </div>
+    @if (!loading() && !errorMessage()) {
+      <span class="count"
+        >{{ entries().length }} {{ entries().length === 1 ? 'entrada' : 'entradas' }}</span
+      >
+    }
+  </div>
+
+  <div aria-live="polite">
+    @if (loading()) {
+      <div class="state-card">Carregando produtos…</div>
+    } @else {
+      @if (errorMessage()) {
+        <div class="state-card state-card--error">
+          <p>{{ errorMessage() }}</p>
+          <button type="button" (click)="retryRequested.emit()">Tentar novamente</button>
+        </div>
+      }
+
+      @if (entries().length === 0) {
+        @if (!errorMessage()) {
+          <div class="state-card">
+            <strong>Seu estoque ainda está vazio.</strong>
+            <p>Adicione o primeiro produto usando o formulário acima.</p>
+          </div>
+        }
+      } @else {
+        <div class="entry-list" [class.entry-list--with-alert]="errorMessage()">
+          @for (entry of entries(); track entry.id) {
+            <article
+              class="entry-card"
+              [class]="'entry-card entry-card--' + entry.status.toLowerCase()"
+            >
+              <div class="entry-card__main">
+                <h3>{{ entry.productName }}</h3>
+                <p>{{ entry.quantity }} {{ entry.quantity === 1 ? 'unidade' : 'unidades' }}</p>
+              </div>
+              <div class="entry-card__date">
+                <span>Validade</span>
+                <strong>{{ formatDate(entry.expirationDate) }}</strong>
+              </div>
+              <div class="entry-card__status">
+                <span class="status-label">{{ entry.statusLabel }}</span>
+                <span>{{ expirationMessage(entry) }}</span>
+              </div>
+            </article>
+          }
+        </div>
+        @if (hasMore()) {
+          <button
+            class="load-more"
+            type="button"
+            [disabled]="loadingMore()"
+            (click)="loadMoreRequested.emit()"
+          >
+            {{ loadingMore() ? 'Carregando…' : 'Carregar mais produtos' }}
+          </button>
+        }
+      }
+    }
+  </div>
+</section>
