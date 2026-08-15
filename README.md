@@ -79,8 +79,13 @@ vence-facil/
 
 ## Status
 
-🚧 Em desenvolvimento — base técnica executável e primeiro fluxo funcional de
-cadastro e consulta do estoque implementado.
+🚧 Em desenvolvimento — base técnica executável, primeiro fluxo funcional e
+ambiente de demonstração publicados.
+
+A versão atual está disponível em
+[vence-facil-production.up.railway.app](https://vence-facil-production.up.railway.app/).
+Como o serviço usa o modo Serverless do Railway, o primeiro acesso após um
+período de inatividade pode levar alguns segundos.
 
 ## Executar localmente
 
@@ -164,9 +169,10 @@ docker compose --profile application down
 O arquivo `railway.json` descreve o build Docker, o healthcheck e a política de
 reinício no Railway. O banco remoto é criado separadamente no Neon, com uma
 credencial para o Flyway e outra, de privilégios mínimos, para a aplicação.
-URLs JDBC remotas devem usar `sslmode=verify-full`. O Railway termina TLS na
-borda e, com **Wait for CI**, só publica a `main` depois que os checks do GitHub
-forem aprovados. O provisionamento completo está em
+URLs JDBC remotas usam `sslmode=verify-full` e a fábrica SSL padrão do Java para
+validar a cadeia de certificados com o truststore da imagem. O Railway termina
+TLS na borda e, com **Wait for CI**, só publica a `main` depois que os checks do
+GitHub forem aprovados. O provisionamento completo está em
 [docs/publicacao.md](docs/publicacao.md).
 
 ## Fluxo de desenvolvimento

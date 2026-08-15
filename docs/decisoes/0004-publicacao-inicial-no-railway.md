@@ -17,7 +17,9 @@ Depois do período inicial, a demonstração pode ficar indisponível ao esgotar
 crédito mensal; nesse caso, a primeira opção é reduzir o tempo ativo com
 Serverless e a segunda é promover o serviço para o plano Hobby. O banco permanece
 no Neon, com papéis distintos para Flyway e runtime e TLS com verificação do
-hostname.
+hostname. O pgJDBC usa `verify-full` com `DefaultJavaSSLFactory` para validar a
+cadeia pública do Neon pelo truststore da JVM sem manter um certificado raiz na
+imagem.
 
 ## Consequências
 

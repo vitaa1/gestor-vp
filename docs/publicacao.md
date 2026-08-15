@@ -68,11 +68,17 @@ todo acesso a `flyway_schema_history`, evitando que os privilégios padrão sobr
 tabelas alcancem o histórico do Flyway.
 
 Use conexões diretas nesta primeira publicação. Converta a URL do Neon para o
-formato JDBC, mantendo o hostname e acrescentando `sslmode=verify-full`:
+formato JDBC, mantenha o hostname e configure o pgJDBC para validar certificado
+e hostname com o truststore padrão do Java:
 
 ```text
-jdbc:postgresql://<hostname-neon>/<database>?sslmode=verify-full
+jdbc:postgresql://<hostname-neon>/<database>?sslmode=verify-full&sslfactory=org.postgresql.ssl.DefaultJavaSSLFactory
 ```
+
+Sem `DefaultJavaSSLFactory`, a fábrica compatível com libpq procura por padrão o
+arquivo `~/.postgresql/root.crt`, que não existe na imagem de publicação. Não
+substitua `verify-full` por `require` como atalho: `require` criptografa a
+conexão, mas não valida o certificado e o hostname do servidor.
 
 ## 2. Criar o serviço no Railway
 
@@ -96,30 +102,33 @@ plano pago; o serviço que já estiver ativo não é removido por essa restriç�
 Cadastre as variáveis abaixo. Insira senhas somente pela área de variáveis do
 Railway e nunca no repositório:
 
-| Variável | Valor |
-| --- | --- |
-| `DB_URL` | URL JDBC direta do Neon com `sslmode=verify-full` |
-| `DB_USERNAME` | `vence_facil_runtime` |
-| `DB_PASSWORD` | senha exclusiva do runtime |
-| `SPRING_FLYWAY_URL` | mesma URL JDBC direta |
-| `SPRING_FLYWAY_USER` | `vence_facil_migration` |
-| `SPRING_FLYWAY_PASSWORD` | senha exclusiva de migration |
-| `APP_USERNAME` | usuário compartilhado da demonstração |
-| `APP_PASSWORD` | senha exclusiva da demonstração, com 12 a 200 caracteres |
-| `DEMO_MODE` | `true` |
-| `DEMO_INSTANCE_ID` | identificador aleatório e exclusivo deste banco |
-| `DEMO_RESET_AFTER` | `24h` |
-| `TRUSTED_PROXY_HEADER` | `X-Real-IP` |
-| `AUTH_RATE_LIMIT_MAX_FAILURES` | `5` |
-| `AUTH_RATE_LIMIT_MAX_FAILURES_PER_IP` | `20` |
-| `AUTH_RATE_LIMIT_WINDOW` | `15m` |
-| `AUTH_RATE_LIMIT_MAX_KEYS` | `10000` |
-| `DB_POOL_MINIMUM_IDLE` | `0` |
-| `DB_POOL_IDLE_TIMEOUT` | `60000` |
+| Variável                              | Valor                                                               |
+| ------------------------------------- | ------------------------------------------------------------------- |
+| `DB_URL`                              | URL JDBC direta com `sslmode=verify-full` e `DefaultJavaSSLFactory` |
+| `DB_USERNAME`                         | `vence_facil_runtime`                                               |
+| `DB_PASSWORD`                         | senha exclusiva do runtime                                          |
+| `SPRING_FLYWAY_URL`                   | mesma URL JDBC direta                                               |
+| `SPRING_FLYWAY_USER`                  | `vence_facil_migration`                                             |
+| `SPRING_FLYWAY_PASSWORD`              | senha exclusiva de migration                                        |
+| `APP_USERNAME`                        | usuário compartilhado da demonstração                               |
+| `APP_PASSWORD`                        | senha exclusiva da demonstração, com 12 a 200 caracteres            |
+| `DEMO_MODE`                           | `true`                                                              |
+| `DEMO_INSTANCE_ID`                    | identificador aleatório e exclusivo deste banco                     |
+| `DEMO_RESET_AFTER`                    | `24h`                                                               |
+| `TRUSTED_PROXY_HEADER`                | `X-Real-IP`                                                         |
+| `AUTH_RATE_LIMIT_MAX_FAILURES`        | `5`                                                                 |
+| `AUTH_RATE_LIMIT_MAX_FAILURES_PER_IP` | `20`                                                                |
+| `AUTH_RATE_LIMIT_WINDOW`              | `15m`                                                               |
+| `AUTH_RATE_LIMIT_MAX_KEYS`            | `10000`                                                             |
+| `DB_POOL_MINIMUM_IDLE`                | `0`                                                                 |
+| `DB_POOL_IDLE_TIMEOUT`                | `60000`                                                             |
 
 Nunca reutilize essas senhas em desenvolvimento ou em outra implantação. O
 Railway fornece HTTPS, injeta `PORT` e encaminha o endereço validado do cliente
 em `X-Real-IP`.
+
+O ambiente de demonstração atual está publicado em
+[vence-facil-production.up.railway.app](https://vence-facil-production.up.railway.app/).
 
 ## 3. Validar o primeiro deploy
 
@@ -142,3 +151,20 @@ Após os checks e o deploy concluírem:
 
 Se o startup falhar por permissão, corrija os `GRANT` no Neon. Não troque a
 aplicação para o papel de migration ou proprietário como atalho.
+
+## 4. Diagnosticar falhas de inicialização
+
+O healthcheck informa apenas que a aplicação não ficou disponível. Consulte
+**Deploy Logs** para encontrar a causa antes de aumentar o timeout ou repetir o
+deploy.
+
+| Mensagem principal                                                | Causa provável                                                       | Correção                                                                         |
+| ----------------------------------------------------------------- | -------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| `Connection to localhost:5432 refused`                            | `DB_URL` e `SPRING_FLYWAY_URL` ausentes                              | cadastre as URLs diretas do Neon nas variáveis do serviço                        |
+| `Could not open SSL root certificate file`                        | URL com `verify-full`, mas usando a fábrica SSL compatível com libpq | acrescente `sslfactory=org.postgresql.ssl.DefaultJavaSSLFactory` às duas URLs    |
+| `password authentication failed for user 'vence_facil_migration'` | senha do Flyway não corresponde ao papel de migration                | corrija somente `SPRING_FLYWAY_PASSWORD` ou redefina a senha desse papel no Neon |
+| `password authentication failed for user 'vence_facil_runtime'`   | senha do datasource não corresponde ao papel de runtime              | corrija somente `DB_PASSWORD` ou redefina a senha desse papel no Neon            |
+
+Não inclua usuário ou senha na URL JDBC e não copie os valores locais sugeridos
+automaticamente pelo Railway. `DB_PASSWORD` e `SPRING_FLYWAY_PASSWORD` são
+segredos distintos.

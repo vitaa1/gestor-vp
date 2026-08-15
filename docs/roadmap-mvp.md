@@ -30,12 +30,19 @@ focado, validações automatizadas e as revisões delegadas definidas no
 - registrar as regras acordadas para retirada, busca e detalhes opcionais;
 - manter este roadmap como ordem de referência para os próximos PRs.
 
-### 2. Publicar o primeiro fluxo
+### 2. Publicar o primeiro fluxo — validação operacional em andamento
+
+O container está online desde 15/08/2026, com domínio público, healthcheck,
+TLS, migrations V1–V3, **Wait for CI** e **Serverless** configurados. Antes de
+encerrar este incremento, ainda é necessário validar login e dados sintéticos,
+cadastro com persistência, proteção da borda contra falsificação de
+`X-Real-IP`, repouso/reativação e um autodeploy da `main` após o CI aprovado.
 
 - gerar o build Angular e servi-lo pelo Spring Boot em um único container;
 - publicar a aplicação no Railway Free e o PostgreSQL no Neon Free;
 - configurar HTTPS, healthcheck e conexão com o Neon usando
-  `sslmode=verify-full`, hostname oficial e cadeia de CA confiável;
+  `sslmode=verify-full`, `DefaultJavaSSLFactory`, hostname oficial e cadeia de
+  CA confiável;
 - executar Flyway no startup com usuário de migration separado do usuário de
   runtime;
 - migrar os endpoints do produto para `/api/v1/**` antes da publicação;
@@ -126,10 +133,10 @@ exclusiva e nunca reutilizada. Seu valor ainda é injetado por variável do
 Railway, e o banco contém somente dados sintéticos e descartáveis. Segredos de
 ambientes não demonstrativos permanecem proibidos no repositório.
 
-A conexão JDBC usa `sslmode=verify-full`, o hostname oficial do Neon e uma
-cadeia de CA confiável. Flyway recebe credenciais próprias de migration; o
-datasource da aplicação usa um papel de runtime com privilégios mínimos e sem
-acesso ao histórico de migrations.
+A conexão JDBC usa `sslmode=verify-full`, `DefaultJavaSSLFactory`, o hostname
+oficial do Neon e uma cadeia de CA confiável. Flyway recebe credenciais próprias
+de migration; o datasource da aplicação usa um papel de runtime com privilégios
+mínimos e sem acesso ao histórico de migrations.
 
 O rate limiting usa somente o cabeçalho de IP explicitamente confiado para a
 plataforma (`X-Real-IP` no Railway) e rejeita cadeias e hostnames. Há
