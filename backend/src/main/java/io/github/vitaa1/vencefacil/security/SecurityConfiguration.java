@@ -13,18 +13,23 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 
 @Configuration(proxyBeanMethods = false)
-@EnableConfigurationProperties(ApplicationSecurityProperties.class)
+@EnableConfigurationProperties({ ApplicationSecurityProperties.class, AuthenticationRateLimitProperties.class })
 class SecurityConfiguration {
 
 	@Bean
-	SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+	SecurityFilterChain securityFilterChain(HttpSecurity http,
+			AuthenticationRateLimitFilter authenticationRateLimitFilter) throws Exception {
 		http
 			.authorizeHttpRequests(authorize -> authorize
 				.requestMatchers(HttpMethod.GET, "/actuator/health", "/actuator/health/**").permitAll()
-				.anyRequest().authenticated())
+				.requestMatchers("/api/**", "/actuator/**").authenticated()
+				.requestMatchers(HttpMethod.GET, "/**").permitAll()
+				.anyRequest().denyAll())
 			.httpBasic(Customizer.withDefaults())
+			.addFilterBefore(authenticationRateLimitFilter, BasicAuthenticationFilter.class)
 			.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 			.csrf(csrf -> csrf.disable());
 

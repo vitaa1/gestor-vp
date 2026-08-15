@@ -13,6 +13,8 @@ focado, validações automatizadas e as revisões delegadas definidas no
   MVP.
 - Cada implantação representa um estabelecimento e utiliza uma única conta de
   operador durante o MVP.
+- Regras de domínio, segurança, contratos e correções seguem TDD quando o teste
+  automatizado consegue expressar o comportamento antes da implementação.
 - Mudanças de schema usam Flyway e devem ser aditivas e retrocompatíveis com a
   versão anterior enquanto o plano gratuito executar migrations no startup.
 - Flyway usa uma credencial de migration própria; a aplicação usa outra
@@ -41,8 +43,8 @@ focado, validações automatizadas e as revisões delegadas definidas no
   healthcheck, mantendo `/api/**` autenticado;
 - manter saúde e informações mínimas em `/actuator/health` e `/actuator/info`,
   sem expor endpoint para migrations;
-- limitar autenticações inválidas pela combinação de identidade e IP obtido da
-  cadeia de proxy confiável do Render;
+- limitar autenticações inválidas pela combinação de identidade e IP e também
+  pelo IP, evitando contorno por rotação de identidades;
 - adicionar `DEMO_MODE`, dados representativos e restauração após 24 horas;
 - executar Playwright contra frontend, backend e PostgreSQL reais para login,
   cadastro e listagem;
@@ -128,7 +130,7 @@ A conexão JDBC usa `sslmode=verify-full`, o hostname oficial do Neon e uma
 cadeia de CA confiável. Flyway recebe credenciais próprias de migration; o
 datasource da aplicação usa um papel de runtime com privilégios mínimos.
 
-O rate limiting não confia cegamente em `X-Forwarded-For`: a origem do IP e a
-cadeia de proxies aceitos devem ser verificadas no Render. A chave combina
-identidade e IP, possui armazenamento limitado e responde `429` sem informar se
-o usuário existe.
+O rate limiting usa somente o cabeçalho de IP explicitamente confiado para a
+plataforma (`CF-Connecting-IP` no Render) e rejeita cadeias e hostnames. Há
+limites pela combinação de identidade e IP e também pelo IP isolado, com
+armazenamento limitado e resposta `429` sem informar se o usuário existe.

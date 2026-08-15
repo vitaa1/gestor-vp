@@ -22,10 +22,10 @@ A verificação de saúde estará disponível em
 
 ## Estoque
 
-A API expõe o primeiro fluxo funcional em `/api/stock-entries`:
+A API expõe o primeiro fluxo funcional em `/api/v1/stock-entries`:
 
-- `POST /api/stock-entries`: cadastra nome, quantidade e data de validade;
-- `GET /api/stock-entries`: lista entradas com saldo disponível pela validade
+- `POST /api/v1/stock-entries`: cadastra nome, quantidade e data de validade;
+- `GET /api/v1/stock-entries`: lista entradas com saldo disponível pela validade
   mais próxima.
 
 Exemplo de cadastro:
@@ -47,5 +47,12 @@ Os testes de integração utilizam Testcontainers e exigem o Docker em execuçã
 ```
 
 As configurações aceitam `DB_URL`, `DB_USERNAME`, `DB_PASSWORD`, `SERVER_PORT`,
-`APP_USERNAME` e `APP_PASSWORD` como variáveis de ambiente. A API não inicia
+`APP_USERNAME` e `APP_PASSWORD` como variáveis de ambiente. Em publicação,
+`SPRING_FLYWAY_URL`, `SPRING_FLYWAY_USER` e `SPRING_FLYWAY_PASSWORD` fornecem
+uma credencial de migration separada do usuário de runtime. A API não inicia
 sem uma conta de operador configurada e deve ser publicada somente por HTTPS.
+
+O modo de demonstração exige `DEMO_MODE=true`, um `DEMO_INSTANCE_ID` exclusivo
+e um banco vazio dedicado. Ele restaura somente dados sintéticos após o
+intervalo de `DEMO_RESET_AFTER` e falha sem apagar nada se o marcador do banco
+não corresponder à instância.

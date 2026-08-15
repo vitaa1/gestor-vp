@@ -1,6 +1,6 @@
 package io.github.vitaa1.vencefacil.inventory;
 
-import java.net.URI;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -16,7 +16,7 @@ import jakarta.validation.constraints.Min;
 
 @RestController
 @Validated
-@RequestMapping("/api/stock-entries")
+@RequestMapping("/api/v1/stock-entries")
 class StockEntryController {
 
 	private final StockEntryService stockEntryService;
@@ -28,7 +28,7 @@ class StockEntryController {
 	@PostMapping
 	ResponseEntity<StockEntryResponse> create(@Valid @RequestBody CreateStockEntryRequest request) {
 		StockEntryResponse response = stockEntryService.create(request);
-		return ResponseEntity.created(URI.create("/api/stock-entries/" + response.id())).body(response);
+		return ResponseEntity.status(HttpStatus.CREATED).body(response);
 	}
 
 	@GetMapping
