@@ -61,7 +61,7 @@ O escopo detalhado está em [docs/produto.md](docs/produto.md).
 - Docker Compose
 - GitHub Actions
 - Playwright
-- Render e Neon para a demonstração publicada
+- Railway e Neon para a demonstração publicada
 
 Angular Material, PWA e OpenAPI não são requisitos do MVP. Essas tecnologias
 serão reavaliadas somente quando trouxerem benefício concreto ao produto.
@@ -161,11 +161,12 @@ A aplicação completa ficará em `http://localhost:8080`. Para encerrá-la:
 docker compose --profile application down
 ```
 
-O arquivo `render.yaml` descreve o serviço no Render. O banco remoto é criado
-separadamente no Neon, com uma credencial para o Flyway e outra, de privilégios
-mínimos, para a aplicação. URLs JDBC remotas devem usar `sslmode=verify-full`.
-O Render termina TLS na borda e só inicia o deploy automático da `main` quando
-os checks do GitHub estiverem aprovados. O provisionamento completo está em
+O arquivo `railway.json` descreve o build Docker, o healthcheck e a política de
+reinício no Railway. O banco remoto é criado separadamente no Neon, com uma
+credencial para o Flyway e outra, de privilégios mínimos, para a aplicação.
+URLs JDBC remotas devem usar `sslmode=verify-full`. O Railway termina TLS na
+borda e, com **Wait for CI**, só publica a `main` depois que os checks do GitHub
+forem aprovados. O provisionamento completo está em
 [docs/publicacao.md](docs/publicacao.md).
 
 ## Fluxo de desenvolvimento

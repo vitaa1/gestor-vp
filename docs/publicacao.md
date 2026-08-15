@@ -1,56 +1,104 @@
 # Publicação inicial
 
-Este guia prepara a demonstração do Vence Fácil no Render com PostgreSQL no
+Este guia prepara a demonstração do Vence Fácil no Railway com PostgreSQL no
 Neon. O ambiente contém somente dados sintéticos e descartáveis.
 
 ## 1. Criar o banco e os papéis no Neon
 
-Crie um projeto, escolha uma região próxima da região do serviço no Render e
-mantenha o hostname fornecido pelo Neon. No SQL Editor, conectado com o papel
-proprietário, substitua as senhas e execute:
+Crie um projeto na região AWS Oregon, próxima da região US West do Railway, e
+mantenha o hostname fornecido pelo Neon. Use o papel proprietário apenas para o
+bootstrap. Papéis criados pelo botão **Add role** do Console recebem associação
+com `neon_superuser` e não servem para a separação de privilégios desta
+aplicação.
+
+No SQL Editor, conectado como proprietário, execute o bloco abaixo. As senhas
+são geradas dentro do PostgreSQL e aparecem somente no resultado do segundo
+comando, sem serem gravadas no texto da consulta:
 
 ```sql
-create role vence_facil_migration login password '<senha-forte-de-migration>';
-create role vence_facil_runtime login password '<senha-forte-de-runtime>';
+create or replace function pg_temp.bootstrap_vence_facil_roles()
+returns table(role_name text, generated_password text)
+language plpgsql
+as $bootstrap$
+declare
+    migration_password text := gen_random_uuid()::text || gen_random_uuid()::text;
+    runtime_password text := gen_random_uuid()::text || gen_random_uuid()::text;
+begin
+    execute format(
+        'create role vence_facil_migration login password %L',
+        migration_password
+    );
 
-grant usage, create on schema public to vence_facil_migration;
-grant usage on schema public to vence_facil_runtime;
+    execute format(
+        'create role vence_facil_runtime login password %L',
+        runtime_password
+    );
+
+    execute 'grant usage, create on schema public to vence_facil_migration';
+    execute 'grant usage on schema public to vence_facil_runtime';
+
+    execute 'grant vence_facil_migration to neondb_owner
+             with set true, inherit false';
+    execute 'set local role vence_facil_migration';
+
+    execute 'alter default privileges in schema public
+             grant select, insert, update, delete on tables
+             to vence_facil_runtime';
+    execute 'alter default privileges in schema public
+             grant usage, select on sequences to vence_facil_runtime';
+
+    execute 'reset role';
+    execute 'grant vence_facil_migration to neondb_owner
+             with set false, inherit false';
+
+    return query values
+        ('vence_facil_migration'::text, migration_password),
+        ('vence_facil_runtime'::text, runtime_password);
+end
+$bootstrap$;
+
+select * from pg_temp.bootstrap_vence_facil_roles();
 ```
 
-Depois, conecte o SQL Editor como `vence_facil_migration` e configure os
-privilégios que serão aplicados aos objetos criados pelo Flyway:
+Guarde cada senha em um gerenciador de segredos. Não conceda `CREATE` no schema
+ao papel de runtime. O `DELETE` é necessário nesta demonstração porque o reset
+diário substitui os dados sintéticos; remova-o de uma implantação que passe a
+guardar dados reais e não utilize `DEMO_MODE`. A migration V3 revoga do runtime
+todo acesso a `flyway_schema_history`, evitando que os privilégios padrão sobre
+tabelas alcancem o histórico do Flyway.
 
-```sql
-alter default privileges in schema public
-    grant select, insert, update, delete on tables to vence_facil_runtime;
-
-alter default privileges in schema public
-    grant usage, select on sequences to vence_facil_runtime;
-```
-
-Não conceda `CREATE` no schema ao papel de runtime. O `DELETE` é necessário
-nesta demonstração porque o reset diário substitui os dados sintéticos; ele
-deve ser removido de uma implantação que passe a guardar dados reais e não use
-`DEMO_MODE`.
-
-Use conexões diretas nesta primeira publicação. Converta as URLs do Neon para o
+Use conexões diretas nesta primeira publicação. Converta a URL do Neon para o
 formato JDBC, mantendo o hostname e acrescentando `sslmode=verify-full`:
 
 ```text
 jdbc:postgresql://<hostname-neon>/<database>?sslmode=verify-full
 ```
 
-## 2. Criar o Blueprint no Render
+## 2. Criar o serviço no Railway
 
-Conecte o repositório ao Render e crie um Blueprint a partir do `render.yaml`.
-O arquivo fixa a branch `main`, o Dockerfile, o healthcheck e o deploy somente
-após os checks do GitHub.
+Conecte a conta do GitHub ao Railway, crie um projeto vazio e adicione um
+serviço a partir do repositório `vitaa1/vence-facil`. Selecione a branch `main`.
+O `railway.json` fixa o Dockerfile, o healthcheck e a política de reinício.
 
-Preencha os valores marcados como secretos:
+Nas configurações do serviço:
+
+1. habilite **Wait for CI** para impedir deploy quando o GitHub Actions falhar;
+2. habilite **Serverless** para reduzir consumo enquanto a demonstração estiver
+   inativa;
+3. escolha a região **US West**;
+4. gere um domínio público do Railway;
+5. não adicione volume ou banco do Railway.
+
+No plano Free, novos deploys em US West são recusados entre 8h e 20h no horário
+do Pacífico. Faça o primeiro deploy fora dessa janela ou use temporariamente um
+plano pago; o serviço que já estiver ativo não é removido por essa restrição.
+
+Cadastre as variáveis abaixo. Insira senhas somente pela área de variáveis do
+Railway e nunca no repositório:
 
 | Variável | Valor |
 | --- | --- |
-| `DB_URL` | URL JDBC do Neon com o papel de runtime |
+| `DB_URL` | URL JDBC direta do Neon com `sslmode=verify-full` |
 | `DB_USERNAME` | `vence_facil_runtime` |
 | `DB_PASSWORD` | senha exclusiva do runtime |
 | `SPRING_FLYWAY_URL` | mesma URL JDBC direta |
@@ -58,11 +106,20 @@ Preencha os valores marcados como secretos:
 | `SPRING_FLYWAY_PASSWORD` | senha exclusiva de migration |
 | `APP_USERNAME` | usuário compartilhado da demonstração |
 | `APP_PASSWORD` | senha exclusiva da demonstração, com 12 a 200 caracteres |
+| `DEMO_MODE` | `true` |
 | `DEMO_INSTANCE_ID` | identificador aleatório e exclusivo deste banco |
+| `DEMO_RESET_AFTER` | `24h` |
+| `TRUSTED_PROXY_HEADER` | `X-Real-IP` |
+| `AUTH_RATE_LIMIT_MAX_FAILURES` | `5` |
+| `AUTH_RATE_LIMIT_MAX_FAILURES_PER_IP` | `20` |
+| `AUTH_RATE_LIMIT_WINDOW` | `15m` |
+| `AUTH_RATE_LIMIT_MAX_KEYS` | `10000` |
+| `DB_POOL_MINIMUM_IDLE` | `0` |
+| `DB_POOL_IDLE_TIMEOUT` | `60000` |
 
 Nunca reutilize essas senhas em desenvolvimento ou em outra implantação. O
-Render fornece HTTPS, injeta `PORT` e encaminha o IP validado pelo cabeçalho
-configurado no Blueprint.
+Railway fornece HTTPS, injeta `PORT` e encaminha o endereço validado do cliente
+em `X-Real-IP`.
 
 ## 3. Validar o primeiro deploy
 
@@ -73,7 +130,15 @@ Após os checks e o deploy concluírem:
 3. faça login com a credencial da demonstração;
 4. confirme os quatro registros sintéticos;
 5. cadastre uma entrada e atualize a página para validar a persistência;
-6. verifique nos logs que as migrations chegaram à versão mais recente.
+6. verifique nos logs que as migrations chegaram à versão mais recente e que a
+   V3 protegeu o histórico do Flyway;
+7. de uma única conexão, faça 20 logins inválidos com usuários diferentes e um
+   valor de `X-Real-IP` diferente em cada requisição; a 21ª tentativa deve
+   receber `429`, confirmando que a borda sobrescreve o cabeçalho enviado pelo
+   cliente e mantém o limite pelo IP real;
+8. depois que o pool liberar as conexões ociosas, aguarde ao menos 10 minutos e
+   confirme que o primeiro acesso reativa o serviço. O repouso é uma otimização
+   de melhor esforço e pode ser impedido por outro tráfego de saída da JVM.
 
 Se o startup falhar por permissão, corrija os `GRANT` no Neon. Não troque a
-aplicação para o papel de migration como atalho.
+aplicação para o papel de migration ou proprietário como atalho.

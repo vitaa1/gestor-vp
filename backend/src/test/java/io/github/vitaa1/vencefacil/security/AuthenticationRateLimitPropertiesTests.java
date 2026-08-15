@@ -16,7 +16,7 @@ class AuthenticationRateLimitPropertiesTests {
 	@Test
 	void rejectsANonPositiveWindow() {
 		AuthenticationRateLimitProperties properties = new AuthenticationRateLimitProperties(
-				2, 3, Duration.ZERO, 100, "CF-Connecting-IP");
+				2, 3, Duration.ZERO, 100, "X-Real-IP");
 
 		assertThat(validator.validate(properties))
 			.extracting(violation -> violation.getPropertyPath().toString())

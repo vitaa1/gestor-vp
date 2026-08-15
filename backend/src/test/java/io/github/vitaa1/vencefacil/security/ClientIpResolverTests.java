@@ -10,12 +10,12 @@ import org.springframework.mock.web.MockHttpServletRequest;
 class ClientIpResolverTests {
 
 	private final ClientIpResolver resolver = new ClientIpResolver(new AuthenticationRateLimitProperties(
-			2, 3, Duration.ofMinutes(15), 100, "CF-Connecting-IP"));
+			2, 3, Duration.ofMinutes(15), 100, "X-Real-IP"));
 
 	@Test
 	void acceptsASingleNumericAddressFromTheConfiguredProxyHeader() {
 		MockHttpServletRequest request = requestFrom("192.0.2.10");
-		request.addHeader("CF-Connecting-IP", "203.0.113.10");
+		request.addHeader("X-Real-IP", "203.0.113.10");
 
 		assertThat(resolver.resolve(request)).isEqualTo("203.0.113.10");
 	}
@@ -23,11 +23,11 @@ class ClientIpResolverTests {
 	@Test
 	void fallsBackToTheConnectionAddressForChainsAndHostnames() {
 		MockHttpServletRequest chain = requestFrom("192.0.2.20");
-		chain.addHeader("CF-Connecting-IP", "203.0.113.10, 198.51.100.2");
+		chain.addHeader("X-Real-IP", "203.0.113.10, 198.51.100.2");
 		MockHttpServletRequest hostname = requestFrom("192.0.2.21");
-		hostname.addHeader("CF-Connecting-IP", "attacker.example");
+		hostname.addHeader("X-Real-IP", "attacker.example");
 		MockHttpServletRequest hexadecimalHostname = requestFrom("192.0.2.22");
-		hexadecimalHostname.addHeader("CF-Connecting-IP", "face.de");
+		hexadecimalHostname.addHeader("X-Real-IP", "face.de");
 
 		assertThat(resolver.resolve(chain)).isEqualTo("192.0.2.20");
 		assertThat(resolver.resolve(hostname)).isEqualTo("192.0.2.21");
@@ -51,7 +51,7 @@ class ClientIpResolverTests {
 
 	private String resolveForwarded(String address) {
 		MockHttpServletRequest request = requestFrom("192.0.2.30");
-		request.addHeader("CF-Connecting-IP", address);
+		request.addHeader("X-Real-IP", address);
 		return resolver.resolve(request);
 	}
 
