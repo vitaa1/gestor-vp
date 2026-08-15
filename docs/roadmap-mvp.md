@@ -30,13 +30,24 @@ focado, validações automatizadas e as revisões delegadas definidas no
 - registrar as regras acordadas para retirada, busca e detalhes opcionais;
 - manter este roadmap como ordem de referência para os próximos PRs.
 
-### 2. Publicar o primeiro fluxo — validação operacional em andamento
+### 2. Publicar o primeiro fluxo — validação operacional quase concluída
 
 O container está online desde 15/08/2026, com domínio público, healthcheck,
-TLS, migrations V1–V3, **Wait for CI** e **Serverless** configurados. Antes de
-encerrar este incremento, ainda é necessário validar login e dados sintéticos,
-cadastro com persistência, proteção da borda contra falsificação de
-`X-Real-IP`, repouso/reativação e um autodeploy da `main` após o CI aprovado.
+TLS, migrations V1–V3, **Wait for CI** e **Serverless** configurados. A
+validação operacional confirmou:
+
+- CI aprovado para o merge do PR #6 e autodeploy da `main` iniciado pelo
+  Railway somente depois do check;
+- healthcheck `200` com estado `UP`, login, os quatro registros sintéticos e um
+  cadastro preservado após recarregar a aplicação;
+- schema na versão 3 e ausência de permissão do papel `vence_facil_runtime`
+  para consultar `flyway_schema_history`;
+- vinte respostas `401` seguidas de `429` na 21ª autenticação inválida, mesmo
+  com valores diferentes de `X-Real-IP` enviados pelo cliente;
+- entrada do serviço em repouso após a inatividade.
+
+Resta confirmar que o primeiro acesso após ao menos dez minutos de repouso
+reativa o serviço.
 
 - gerar o build Angular e servi-lo pelo Spring Boot em um único container;
 - publicar a aplicação no Railway Free e o PostgreSQL no Neon Free;
