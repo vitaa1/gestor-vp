@@ -16,7 +16,7 @@ export class AuthService {
   login(username: string, password: string): Observable<void> {
     const authorization = `Basic ${this.encodeCredentials(username, password)}`;
     return this.http
-      .get<AuthenticatedUser>('/api/auth/me', {
+      .get<AuthenticatedUser>('/api/v1/auth/me', {
         headers: new HttpHeaders({ Authorization: authorization }),
       })
       .pipe(

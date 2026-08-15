@@ -1,3 +1,7 @@
+<div class="development-banner" role="status">
+  Versão em desenvolvimento · Dados desta demonstração podem ser restaurados diariamente.
+</div>
+
 @if (!authService.authenticated()) {
   <app-login (loggedIn)="loadEntries()" />
 } @else {

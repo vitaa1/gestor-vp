@@ -1,0 +1,14 @@
+.git
+.github
+.agents
+.env
+.env.*
+skills-lock.json
+**/node_modules
+**/dist
+**/target
+**/.angular
+**/coverage
+playwright-report
+test-results
+*.log

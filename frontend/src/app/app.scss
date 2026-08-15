@@ -3,6 +3,15 @@
   min-height: 100dvh;
 }
 
+.development-banner {
+  padding: 0.55rem 1rem;
+  color: #fff;
+  background: #6d3b00;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-align: center;
+}
+
 header {
   border-bottom: 1px solid var(--color-border);
   background: rgb(255 255 255 / 88%);

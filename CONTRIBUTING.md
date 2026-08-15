@@ -23,6 +23,13 @@ Alterações não devem ser desenvolvidas ou commitadas diretamente na `main`.
 
 3. Implemente e execute as verificações locais relacionadas à mudança.
 
+   Para regras de domínio, segurança, contratos HTTP e correções de bugs,
+   prefira TDD: escreva primeiro um teste que reproduza o comportamento
+   esperado e falhe pelo motivo correto; implemente o mínimo para fazê-lo
+   passar; depois refatore mantendo a suíte verde. Configurações de Docker, CI
+   e publicação devem possuir validação executável e cobertura E2E quando não
+   couber um teste unitário.
+
 4. Faça commits pequenos com mensagens no padrão Conventional Commits:
 
    ```text

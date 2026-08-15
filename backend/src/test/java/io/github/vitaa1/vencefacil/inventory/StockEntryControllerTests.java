@@ -1,7 +1,6 @@
 package io.github.vitaa1.vencefacil.inventory;
 
 import static org.hamcrest.Matchers.hasSize;
-import static org.hamcrest.Matchers.startsWith;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -52,14 +51,14 @@ class StockEntryControllerTests {
 	void createsAnEntryAndListsActiveStockByExpirationDate() throws Exception {
 		createEntry("Arroz Integral", 4, "2030-10-20")
 			.andExpect(status().isCreated())
-			.andExpect(header().string("Location", startsWith("/api/stock-entries/")))
+			.andExpect(header().doesNotExist("Location"))
 			.andExpect(jsonPath("$.productName").value("Arroz Integral"))
 			.andExpect(jsonPath("$.quantity").value(4));
 
 		createEntry("Leite Integral", 12, "2029-01-10")
 			.andExpect(status().isCreated());
 
-		mockMvc.perform(get("/api/stock-entries").with(operator()))
+		mockMvc.perform(get("/api/v1/stock-entries").with(operator()))
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.content", hasSize(2)))
 			.andExpect(jsonPath("$.content[0].productName").value("Leite Integral"))
@@ -68,7 +67,7 @@ class StockEntryControllerTests {
 
 	@Test
 	void rejectsInvalidEntry() throws Exception {
-		mockMvc.perform(post("/api/stock-entries")
+		mockMvc.perform(post("/api/v1/stock-entries")
 				.with(operator())
 				.contentType(MediaType.APPLICATION_JSON)
 				.content("""
@@ -79,10 +78,10 @@ class StockEntryControllerTests {
 
 	@Test
 	void requiresValidCredentialsForInventory() throws Exception {
-		mockMvc.perform(get("/api/stock-entries"))
+		mockMvc.perform(get("/api/v1/stock-entries"))
 			.andExpect(status().isUnauthorized());
 
-		mockMvc.perform(post("/api/stock-entries")
+		mockMvc.perform(post("/api/v1/stock-entries")
 				.with(httpBasic("test-operator", "wrong-password"))
 				.contentType(MediaType.APPLICATION_JSON)
 				.content("""
@@ -93,10 +92,10 @@ class StockEntryControllerTests {
 
 	@Test
 	void limitsTheRequestedPageSize() throws Exception {
-		mockMvc.perform(get("/api/stock-entries?size=101").with(operator()))
+		mockMvc.perform(get("/api/v1/stock-entries?size=101").with(operator()))
 			.andExpect(status().isBadRequest());
 
-		mockMvc.perform(get("/api/stock-entries?page=10001").with(operator()))
+		mockMvc.perform(get("/api/v1/stock-entries?page=10001").with(operator()))
 			.andExpect(status().isBadRequest());
 	}
 
@@ -111,7 +110,7 @@ class StockEntryControllerTests {
 
 	private org.springframework.test.web.servlet.ResultActions createEntry(String productName, int quantity,
 			String expirationDate) throws Exception {
-		return mockMvc.perform(post("/api/stock-entries")
+		return mockMvc.perform(post("/api/v1/stock-entries")
 			.with(operator())
 			.contentType(MediaType.APPLICATION_JSON)
 			.content("""

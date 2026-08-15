@@ -8,7 +8,7 @@ import { CreateStockEntry, StockEntry, StockEntryPage } from './stock-entry.mode
 export class StockEntryService {
   private readonly http = inject(HttpClient);
   private readonly authService = inject(AuthService);
-  private readonly resourceUrl = '/api/stock-entries';
+  private readonly resourceUrl = '/api/v1/stock-entries';
 
   list(page = 0, size = 50): Observable<StockEntryPage> {
     return this.http.get<StockEntryPage>(this.resourceUrl, {

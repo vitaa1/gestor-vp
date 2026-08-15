@@ -58,3 +58,46 @@ jobs:
 
       - name: Compilar frontend
         run: npm run build
+
+  e2e:
+    name: E2E publicado
+    runs-on: ubuntu-latest
+    needs: [backend, frontend]
+    env:
+      APP_USERNAME: operador-e2e
+      APP_PASSWORD: senha-e2e-segura
+      E2E_USERNAME: operador-e2e
+      E2E_PASSWORD: senha-e2e-segura
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Instalar dependencias
+        working-directory: frontend
+        run: npm ci
+
+      - name: Instalar Chromium
+        working-directory: frontend
+        run: npx playwright install --with-deps chromium
+
+      - name: Subir aplicacao publicada
+        run: docker compose --profile application up --build --detach --wait
+
+      - name: Executar Playwright
+        working-directory: frontend
+        run: npm run e2e
+
+      - name: Exibir logs em caso de falha
+        if: failure()
+        run: docker compose --profile application logs --no-color
+
+      - name: Encerrar infraestrutura
+        if: always()
+        run: docker compose --profile application down --volumes

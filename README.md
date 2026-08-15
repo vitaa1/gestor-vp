@@ -60,6 +60,8 @@ O escopo detalhado está em [docs/produto.md](docs/produto.md).
 
 - Docker Compose
 - GitHub Actions
+- Playwright
+- Render e Neon para a demonstração publicada
 
 Angular Material, PWA e OpenAPI não são requisitos do MVP. Essas tecnologias
 serão reavaliadas somente quando trouxerem benefício concreto ao produto.
@@ -142,6 +144,29 @@ O GitHub Actions executa, a cada pull request:
 - verificação de formatação do frontend;
 - testes unitários do Angular;
 - build de produção do frontend.
+- fluxo E2E de login, cadastro e listagem no container publicado.
+
+## Executar como a aplicação publicada
+
+O build de publicação reúne Angular e Spring Boot em um único container. Para
+compilar e iniciar essa topologia localmente:
+
+```powershell
+docker compose --profile application up --build --wait
+```
+
+A aplicação completa ficará em `http://localhost:8080`. Para encerrá-la:
+
+```powershell
+docker compose --profile application down
+```
+
+O arquivo `render.yaml` descreve o serviço no Render. O banco remoto é criado
+separadamente no Neon, com uma credencial para o Flyway e outra, de privilégios
+mínimos, para a aplicação. URLs JDBC remotas devem usar `sslmode=verify-full`.
+O Render termina TLS na borda e só inicia o deploy automático da `main` quando
+os checks do GitHub estiverem aprovados. O provisionamento completo está em
+[docs/publicacao.md](docs/publicacao.md).
 
 ## Fluxo de desenvolvimento
 
