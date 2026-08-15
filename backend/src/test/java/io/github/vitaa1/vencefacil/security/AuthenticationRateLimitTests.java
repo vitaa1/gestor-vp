@@ -26,7 +26,7 @@ import io.github.vitaa1.vencefacil.TestcontainersConfiguration;
 		"app.security.rate-limit.max-failures-per-ip=3",
 		"app.security.rate-limit.window=15m",
 		"app.security.rate-limit.max-keys=100",
-		"app.security.rate-limit.trusted-proxy-header=CF-Connecting-IP"
+		"app.security.rate-limit.trusted-proxy-header=X-Real-IP"
 })
 class AuthenticationRateLimitTests {
 
@@ -40,7 +40,7 @@ class AuthenticationRateLimitTests {
 
 		mockMvc.perform(get("/api/v1/auth/me")
 				.with(httpBasic("unknown-operator", "wrong-password"))
-				.header("CF-Connecting-IP", "203.0.113.10"))
+				.header("X-Real-IP", "203.0.113.10"))
 			.andExpect(status().isTooManyRequests())
 			.andExpect(jsonPath("$.status").value(429));
 	}
@@ -52,7 +52,7 @@ class AuthenticationRateLimitTests {
 
 		mockMvc.perform(get("/api/v1/auth/me")
 				.with(httpBasic("test-operator", "test-password"))
-				.header("CF-Connecting-IP", "203.0.113.21"))
+				.header("X-Real-IP", "203.0.113.21"))
 			.andExpect(status().isOk());
 	}
 
@@ -64,7 +64,7 @@ class AuthenticationRateLimitTests {
 
 		mockMvc.perform(get("/api/v1/auth/me")
 				.with(httpBasic("rotating-operator-4", "wrong-password"))
-				.header("CF-Connecting-IP", "203.0.113.40"))
+				.header("X-Real-IP", "203.0.113.40"))
 			.andExpect(status().isTooManyRequests())
 			.andExpect(jsonPath("$.status").value(429));
 	}
@@ -77,7 +77,7 @@ class AuthenticationRateLimitTests {
 
 		mockMvc.perform(get("/api/v1/auth/me")
 				.with(httpBasic(sharedPrefix + "-3", "wrong-password"))
-				.header("CF-Connecting-IP", "203.0.113.50"))
+				.header("X-Real-IP", "203.0.113.50"))
 			.andExpect(status().isTooManyRequests())
 			.andExpect(jsonPath("$.status").value(429));
 	}
@@ -103,7 +103,7 @@ class AuthenticationRateLimitTests {
 	private void failedLogin(String username, String forwardedAddress) throws Exception {
 		mockMvc.perform(get("/api/v1/auth/me")
 				.with(httpBasic(username, "wrong-password"))
-				.header("CF-Connecting-IP", forwardedAddress))
+				.header("X-Real-IP", forwardedAddress))
 			.andExpect(status().isUnauthorized());
 	}
 
@@ -116,13 +116,13 @@ class AuthenticationRateLimitTests {
 		for (int attempt = 0; attempt < 2; attempt++) {
 			mockMvc.perform(get(path)
 					.header("Authorization", authorization)
-					.header("CF-Connecting-IP", forwardedAddress))
+					.header("X-Real-IP", forwardedAddress))
 				.andExpect(status().isUnauthorized());
 		}
 
 		mockMvc.perform(get(path)
 				.header("Authorization", authorization)
-				.header("CF-Connecting-IP", forwardedAddress))
+				.header("X-Real-IP", forwardedAddress))
 			.andExpect(status().isTooManyRequests());
 	}
 

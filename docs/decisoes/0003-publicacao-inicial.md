@@ -2,7 +2,7 @@
 
 ## Status
 
-Aceita.
+Supersedida pela ADR 0004.
 
 ## Contexto e decisão
 

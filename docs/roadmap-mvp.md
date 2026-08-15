@@ -8,7 +8,7 @@ focado, validações automatizadas e as revisões delegadas definidas no
 ## Princípios de entrega
 
 - A `main` permanece executável e é a única branch publicada.
-- O Render inicia o deploy somente depois que os checks do GitHub passam.
+- O Railway inicia o deploy somente depois que os checks do GitHub passam.
 - O ambiente remoto é uma demonstração em desenvolvimento até a conclusão do
   MVP.
 - Cada implantação representa um estabelecimento e utiliza uma única conta de
@@ -33,7 +33,7 @@ focado, validações automatizadas e as revisões delegadas definidas no
 ### 2. Publicar o primeiro fluxo
 
 - gerar o build Angular e servi-lo pelo Spring Boot em um único container;
-- publicar a aplicação no Render Free e o PostgreSQL no Neon Free;
+- publicar a aplicação no Railway Free e o PostgreSQL no Neon Free;
 - configurar HTTPS, healthcheck e conexão com o Neon usando
   `sslmode=verify-full`, hostname oficial e cadeia de CA confiável;
 - executar Flyway no startup com usuário de migration separado do usuário de
@@ -105,7 +105,7 @@ focado, validações automatizadas e as revisões delegadas definidas no
 
 ## Publicação inicial
 
-O portfólio usa um único ambiente remoto: Render Free para o container da
+O portfólio usa um único ambiente remoto: Railway Free para o container da
 aplicação e Neon Free para o PostgreSQL. Cold start é aceitável e deve ser
 explicado ao visitante. O endpoint `/actuator/health` controla a saúde do
 deploy, mas rollback de código não reverte migrations nem dados.
@@ -123,14 +123,15 @@ sem apagar dados; não existe endpoint público de reset.
 
 A credencial compartilhada da demonstração é intencionalmente pública,
 exclusiva e nunca reutilizada. Seu valor ainda é injetado por variável do
-Render, e o banco contém somente dados sintéticos e descartáveis. Segredos de
+Railway, e o banco contém somente dados sintéticos e descartáveis. Segredos de
 ambientes não demonstrativos permanecem proibidos no repositório.
 
 A conexão JDBC usa `sslmode=verify-full`, o hostname oficial do Neon e uma
 cadeia de CA confiável. Flyway recebe credenciais próprias de migration; o
-datasource da aplicação usa um papel de runtime com privilégios mínimos.
+datasource da aplicação usa um papel de runtime com privilégios mínimos e sem
+acesso ao histórico de migrations.
 
 O rate limiting usa somente o cabeçalho de IP explicitamente confiado para a
-plataforma (`CF-Connecting-IP` no Render) e rejeita cadeias e hostnames. Há
+plataforma (`X-Real-IP` no Railway) e rejeita cadeias e hostnames. Há
 limites pela combinação de identidade e IP e também pelo IP isolado, com
 armazenamento limitado e resposta `429` sem informar se o usuário existe.
