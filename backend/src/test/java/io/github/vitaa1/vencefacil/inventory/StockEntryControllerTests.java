@@ -1,5 +1,9 @@
 package io.github.vitaa1.vencefacil.inventory;
 
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
+
 import static org.hamcrest.Matchers.hasSize;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -108,6 +112,144 @@ class StockEntryControllerTests {
 		org.assertj.core.api.Assertions.assertThat(stockMovementRepository.count()).isEqualTo(2);
 	}
 
+	@Test
+	void showsEntryDetailsWithInitialAndAvailableQuantities() throws Exception {
+		long entryId = createdEntryId("Leite Integral", 12, "2030-01-10");
+
+		mockMvc.perform(get("/api/v1/stock-entries/{entryId}", entryId).with(operator()))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.id").value(entryId))
+			.andExpect(jsonPath("$.productName").value("Leite Integral"))
+			.andExpect(jsonPath("$.initialQuantity").value(12))
+			.andExpect(jsonPath("$.availableQuantity").value(12))
+			.andExpect(jsonPath("$.expirationDate").value("2030-01-10"))
+			.andExpect(jsonPath("$.statusLabel").isString());
+	}
+
+	@Test
+	void withdrawsUnitsAtomicallyAndRecordsTheReason() throws Exception {
+		long entryId = createdEntryId("Leite Integral", 12, "2030-01-10");
+
+		mockMvc.perform(post("/api/v1/stock-entries/{entryId}/withdrawals", entryId)
+				.with(operator())
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("""
+						{"quantity":5,"reason":"SOLD"}
+						"""))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.initialQuantity").value(12))
+			.andExpect(jsonPath("$.availableQuantity").value(7));
+
+		mockMvc.perform(get("/api/v1/stock-entries/{entryId}", entryId).with(operator()))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.availableQuantity").value(7));
+
+		org.assertj.core.api.Assertions.assertThat(stockMovementRepository.findAll())
+			.hasSize(2)
+			.anySatisfy(movement -> {
+				org.assertj.core.api.Assertions.assertThat(movement.getMovementType())
+					.isEqualTo(MovementType.WITHDRAWAL);
+				org.assertj.core.api.Assertions.assertThat(movement.getQuantity()).isEqualTo(5);
+				org.assertj.core.api.Assertions.assertThat(movement.getReason()).isEqualTo("SOLD");
+			});
+	}
+
+	@Test
+	void rejectsAWithdrawalAboveTheAvailableQuantityWithoutChangingTheBalance() throws Exception {
+		long entryId = createdEntryId("Arroz Integral", 4, "2030-10-20");
+
+		mockMvc.perform(post("/api/v1/stock-entries/{entryId}/withdrawals", entryId)
+				.with(operator())
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("""
+						{"quantity":5,"reason":"USED"}
+						"""))
+			.andExpect(status().isUnprocessableEntity())
+			.andExpect(jsonPath("$.detail").value("A quantidade informada supera o saldo disponível."));
+
+		mockMvc.perform(get("/api/v1/stock-entries/{entryId}", entryId).with(operator()))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.availableQuantity").value(4));
+		org.assertj.core.api.Assertions.assertThat(stockMovementRepository.count()).isEqualTo(1);
+	}
+
+	@Test
+	void allowsOnlyLossOrExpirationReasonsForAnExpiredEntry() throws Exception {
+		long entryId = createdEntryId("Iogurte Natural", 6, "2020-01-01");
+
+		mockMvc.perform(post("/api/v1/stock-entries/{entryId}/withdrawals", entryId)
+				.with(operator())
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("""
+						{"quantity":1,"reason":"SOLD"}
+						"""))
+			.andExpect(status().isUnprocessableEntity())
+			.andExpect(jsonPath("$.detail")
+				.value("Entradas vencidas aceitam somente os motivos Perdi ou Venceu."));
+
+		mockMvc.perform(post("/api/v1/stock-entries/{entryId}/withdrawals", entryId)
+				.with(operator())
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("""
+						{"quantity":2,"reason":"EXPIRED"}
+						"""))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.availableQuantity").value(4));
+	}
+
+	@Test
+	void rejectsInvalidWithdrawalDataAndUnknownEntries() throws Exception {
+		long entryId = createdEntryId("Pão de Forma", 8, "2030-01-01");
+
+		mockMvc.perform(post("/api/v1/stock-entries/{entryId}/withdrawals", entryId)
+				.with(operator())
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("""
+						{"quantity":0,"reason":null}
+						"""))
+			.andExpect(status().isBadRequest());
+
+		mockMvc.perform(get("/api/v1/stock-entries/{entryId}", 999_999).with(operator()))
+			.andExpect(status().isNotFound());
+	}
+
+	@Test
+	void removesAnEntryFromActiveStockWhenTheBalanceReachesZero() throws Exception {
+		long entryId = createdEntryId("Arroz Integral", 4, "2030-10-20");
+
+		mockMvc.perform(post("/api/v1/stock-entries/{entryId}/withdrawals", entryId)
+				.with(operator())
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("""
+						{"quantity":4,"reason":"USED"}
+						"""))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.availableQuantity").value(0));
+
+		mockMvc.perform(get("/api/v1/stock-entries").with(operator()))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.content", hasSize(0)));
+
+		mockMvc.perform(get("/api/v1/stock-entries/{entryId}", entryId).with(operator()))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.availableQuantity").value(0));
+	}
+
+	@Test
+	void preventsConcurrentWithdrawalsFromProducingANegativeBalance() throws Exception {
+		long entryId = createdEntryId("Pão de Forma", 5, "2030-01-01");
+
+		CompletableFuture<Integer> first = CompletableFuture.supplyAsync(() -> withdrawalStatus(entryId, 4));
+		CompletableFuture<Integer> second = CompletableFuture.supplyAsync(() -> withdrawalStatus(entryId, 4));
+		List<Integer> statuses = java.util.stream.Stream.of(first.join(), second.join()).sorted().toList();
+
+		org.assertj.core.api.Assertions.assertThat(statuses).containsExactly(200, 422);
+		mockMvc.perform(get("/api/v1/stock-entries/{entryId}", entryId).with(operator()))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.availableQuantity").value(1));
+		org.assertj.core.api.Assertions.assertThat(stockMovementRepository.count()).isEqualTo(2);
+	}
+
 	private org.springframework.test.web.servlet.ResultActions createEntry(String productName, int quantity,
 			String expirationDate) throws Exception {
 		return mockMvc.perform(post("/api/v1/stock-entries")
@@ -120,6 +262,32 @@ class StockEntryControllerTests {
 
 	private RequestPostProcessor operator() {
 		return httpBasic("test-operator", "test-password");
+	}
+
+	private long createdEntryId(String productName, int quantity, String expirationDate) throws Exception {
+		String response = createEntry(productName, quantity, expirationDate)
+			.andExpect(status().isCreated())
+			.andReturn()
+			.getResponse()
+			.getContentAsString();
+		return com.jayway.jsonpath.JsonPath.<Integer>read(response, "$.id").longValue();
+	}
+
+	private int withdrawalStatus(long entryId, int quantity) {
+		try {
+			return mockMvc.perform(post("/api/v1/stock-entries/{entryId}/withdrawals", entryId)
+					.with(operator())
+					.contentType(MediaType.APPLICATION_JSON)
+					.content("""
+							{"quantity":%d,"reason":"SOLD"}
+							""".formatted(quantity)))
+				.andReturn()
+				.getResponse()
+				.getStatus();
+		}
+		catch (Exception exception) {
+			throw new CompletionException(exception);
+		}
 	}
 
 	private void assertThatSingleProductWasCreated() {

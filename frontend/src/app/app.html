@@ -30,6 +30,10 @@
       (entryCreated)="addCreatedEntry($event)"
     />
 
+    @if (actionMessage()) {
+      <p class="action-message" role="status">{{ actionMessage() }}</p>
+    }
+
     <app-stock-entry-list
       [entries]="entries()"
       [loading]="loading()"
@@ -38,6 +42,19 @@
       [errorMessage]="errorMessage()"
       (retryRequested)="loadEntries()"
       (loadMoreRequested)="loadMore()"
+      (detailsRequested)="openDetails($event)"
     />
   </main>
+
+  @if (detailsOpen()) {
+    <app-stock-entry-details
+      [entry]="selectedEntry()"
+      [loading]="detailsLoading()"
+      [errorMessage]="detailsError()"
+      [withdrawalPending]="withdrawalPending()"
+      [withdrawalError]="withdrawalError()"
+      (closeRequested)="closeDetails()"
+      (withdrawalRequested)="withdrawSelected($event)"
+    />
+  }
 }

@@ -3,7 +3,12 @@ import { TestBed } from '@angular/core/testing';
 import { of, Subject, throwError } from 'rxjs';
 import { App } from './app';
 import { AuthService } from './auth/auth.service';
-import { StockEntry, StockEntryPage } from './inventory/stock-entry.model';
+import {
+  StockEntry,
+  StockEntryDetailsModel,
+  StockEntryPage,
+  WithdrawStock,
+} from './inventory/stock-entry.model';
 import { StockEntryService } from './inventory/stock-entry.service';
 
 const entries: StockEntry[] = [
@@ -26,6 +31,22 @@ class StockEntryServiceStub {
 
   create() {
     return of(entries[0]);
+  }
+
+  details() {
+    return of<StockEntryDetailsModel>({
+      ...entries[0],
+      initialQuantity: 12,
+      availableQuantity: 12,
+    });
+  }
+
+  withdraw(_entryId: number, _withdrawal: WithdrawStock) {
+    return of<StockEntryDetailsModel>({
+      ...entries[0],
+      initialQuantity: 12,
+      availableQuantity: 7,
+    });
   }
 }
 
@@ -141,5 +162,89 @@ describe('App', () => {
 
     expect(component.errorMessage()).toBe('');
     expect(component.entries()).toEqual([...entries, lateEntry]);
+  });
+
+  it('should update the active list immediately after a withdrawal', () => {
+    const fixture = TestBed.createComponent(App);
+    const component = fixture.componentInstance;
+    component.loadEntries();
+    component.openDetails(1);
+
+    component.withdrawSelected({ quantity: 5, reason: 'SOLD' });
+
+    expect(component.entries()[0].quantity).toBe(7);
+    expect(component.detailsOpen()).toBe(false);
+    expect(component.actionMessage()).toContain('atualizado para 7');
+  });
+
+  it('should reconcile the first page when a withdrawal closes an entry', () => {
+    const service = TestBed.inject(StockEntryService);
+    const firstPage = Array.from({ length: 50 }, (_, index) => ({
+      ...entries[0],
+      id: index + 1,
+      productName: `Produto ${index + 1}`,
+    }));
+    const shiftedEntry = { ...entries[0], id: 51, productName: 'Produto 51' };
+    vi.spyOn(service, 'list')
+      .mockReturnValueOnce(
+        of({ content: firstPage, page: 0, size: 50, totalElements: 51, totalPages: 2 }),
+      )
+      .mockReturnValueOnce(
+        of({
+          content: [...firstPage.slice(1), shiftedEntry],
+          page: 0,
+          size: 50,
+          totalElements: 50,
+          totalPages: 1,
+        }),
+      );
+    vi.spyOn(service, 'withdraw').mockReturnValueOnce(
+      of({
+        ...firstPage[0],
+        initialQuantity: 12,
+        availableQuantity: 0,
+      }),
+    );
+    const fixture = TestBed.createComponent(App);
+    const component = fixture.componentInstance;
+    component.loadEntries();
+    component.openDetails(1);
+
+    component.withdrawSelected({ quantity: 12, reason: 'SOLD' });
+
+    expect(component.entries()).toHaveLength(50);
+    expect(component.entries().map((entry) => entry.id)).toContain(51);
+    expect(component.hasMore()).toBe(false);
+    expect(component.actionMessage()).toContain('saiu do estoque ativo');
+  });
+
+  it('should release a pending load-more state when reconciling a closed entry', () => {
+    const service = TestBed.inject(StockEntryService);
+    const pendingPage = new Subject<StockEntryPage>();
+    const remainingEntry = { ...entries[0], id: 2, productName: 'Arroz Integral' };
+    vi.spyOn(service, 'list')
+      .mockReturnValueOnce(
+        of({ content: entries, page: 0, size: 50, totalElements: 2, totalPages: 2 }),
+      )
+      .mockReturnValueOnce(pendingPage)
+      .mockReturnValueOnce(
+        of({ content: [remainingEntry], page: 0, size: 50, totalElements: 1, totalPages: 1 }),
+      );
+    vi.spyOn(service, 'withdraw').mockReturnValueOnce(
+      of({ ...entries[0], initialQuantity: 12, availableQuantity: 0 }),
+    );
+    const fixture = TestBed.createComponent(App);
+    const component = fixture.componentInstance;
+    component.loadEntries();
+    component.loadMore();
+    expect(component.loadingMore()).toBe(true);
+    component.openDetails(1);
+
+    component.withdrawSelected({ quantity: 12, reason: 'SOLD' });
+
+    expect(component.loadingMore()).toBe(false);
+    expect(component.entries()).toEqual([remainingEntry]);
+    pendingPage.next({ content: [], page: 1, size: 50, totalElements: 1, totalPages: 1 });
+    expect(component.loadingMore()).toBe(false);
   });
 });

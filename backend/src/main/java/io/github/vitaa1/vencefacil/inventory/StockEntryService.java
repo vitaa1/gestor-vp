@@ -56,6 +56,32 @@ class StockEntryService {
 		return StockEntryPageResponse.from(result);
 	}
 
+	@Transactional(readOnly = true)
+	StockEntryDetailsResponse details(long entryId) {
+		StockEntry entry = findEntry(entryId);
+		return StockEntryDetailsResponse.from(entry, LocalDate.now(clock));
+	}
+
+	@Transactional
+	StockEntryDetailsResponse withdraw(long entryId, WithdrawStockRequest request) {
+		StockEntry entry = findEntry(entryId);
+		entry.validateWithdrawal(request.quantity(), request.reason(), LocalDate.now(clock));
+
+		if (stockEntryRepository.withdrawIfAvailable(entryId, request.quantity()) == 0) {
+			throw new InvalidWithdrawalException("A quantidade informada supera o saldo disponível.");
+		}
+
+		StockEntry updatedEntry = findEntry(entryId);
+		stockMovementRepository.save(
+				new StockMovement(updatedEntry, request.quantity(), request.reason(), clock.instant()));
+		return StockEntryDetailsResponse.from(updatedEntry, LocalDate.now(clock));
+	}
+
+	private StockEntry findEntry(long entryId) {
+		return stockEntryRepository.findDetailsById(entryId)
+			.orElseThrow(() -> new StockEntryNotFoundException(entryId));
+	}
+
 	private String normalizeWhitespace(String value) {
 		return value.trim().replaceAll("\\s+", " ");
 	}

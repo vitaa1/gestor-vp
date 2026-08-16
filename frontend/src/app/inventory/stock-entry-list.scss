@@ -51,7 +51,7 @@ section {
 
 .entry-card {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto auto;
+  grid-template-columns: minmax(0, 1fr) auto auto auto;
   align-items: center;
   gap: 1.25rem;
   padding: 1rem 1.1rem;
@@ -60,6 +60,18 @@ section {
   border-radius: 0.9rem;
   background: var(--color-surface);
   box-shadow: 0 0.35rem 1rem rgb(30 66 45 / 5%);
+}
+
+.entry-card__details {
+  min-height: 2.5rem;
+  padding-inline: 0.85rem;
+  border: 1px solid var(--color-primary);
+  border-radius: 0.65rem;
+  color: var(--color-primary);
+  background: transparent;
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
 }
 
 .entry-card--expired {
@@ -178,6 +190,10 @@ section {
     padding-top: 0.75rem;
     border-top: 1px solid var(--color-border);
   }
+
+  .entry-card__details {
+    justify-self: end;
+  }
 }
 
 @media (max-width: 25rem) {
@@ -192,5 +208,9 @@ section {
 
   .entry-card__status {
     grid-column: 1;
+  }
+
+  .entry-card__details {
+    justify-self: stretch;
   }
 }

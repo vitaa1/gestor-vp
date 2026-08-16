@@ -48,6 +48,13 @@
                 <span class="status-label">{{ entry.statusLabel }}</span>
                 <span>{{ expirationMessage(entry) }}</span>
               </div>
+              <button
+                class="entry-card__details"
+                type="button"
+                (click)="detailsRequested.emit(entry.id)"
+              >
+                Ver detalhes
+              </button>
             </article>
           }
         </div>

@@ -14,6 +14,7 @@ export class StockEntryList {
   readonly loadingMore = input(false);
   readonly retryRequested = output<void>();
   readonly loadMoreRequested = output<void>();
+  readonly detailsRequested = output<number>();
 
   formatDate(value: string): string {
     const [year, month, day] = value.split('-');
