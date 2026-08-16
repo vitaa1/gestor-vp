@@ -5,6 +5,7 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.forwardedUrl;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import org.junit.jupiter.api.Test;
@@ -41,13 +42,19 @@ class WebBoundaryTests {
 	@Test
 	void neverUsesTheSpaFallbackForApiOrActuatorPaths() throws Exception {
 		mockMvc.perform(get("/api/v1/missing"))
-			.andExpect(status().isUnauthorized());
+			.andExpect(status().isUnauthorized())
+			.andExpect(header().doesNotExist("WWW-Authenticate"));
+
+		mockMvc.perform(get("/api/v1/missing").with(httpBasic("test-operator", "wrong-password")))
+			.andExpect(status().isUnauthorized())
+			.andExpect(header().doesNotExist("WWW-Authenticate"));
 
 		mockMvc.perform(get("/api/v1/missing").with(httpBasic("test-operator", "test-password")))
 			.andExpect(status().isNotFound());
 
 		mockMvc.perform(get("/actuator/info"))
-			.andExpect(status().isUnauthorized());
+			.andExpect(status().isUnauthorized())
+			.andExpect(header().string("WWW-Authenticate", containsString("Basic")));
 
 		mockMvc.perform(get("/actuator/health"))
 			.andExpect(status().isOk());
