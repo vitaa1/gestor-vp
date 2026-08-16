@@ -24,3 +24,22 @@ export interface StockEntryPage {
   totalElements: number;
   totalPages: number;
 }
+
+export type WithdrawalReason = 'SOLD' | 'USED' | 'DONATED' | 'LOST' | 'EXPIRED';
+
+export interface StockEntryDetailsModel {
+  id: number;
+  productName: string;
+  initialQuantity: number;
+  availableQuantity: number;
+  expirationDate: string;
+  status: ExpirationStatus;
+  statusLabel: string;
+  daysUntilExpiration: number;
+  createdAt: string;
+}
+
+export interface WithdrawStock {
+  quantity: number;
+  reason: WithdrawalReason;
+}

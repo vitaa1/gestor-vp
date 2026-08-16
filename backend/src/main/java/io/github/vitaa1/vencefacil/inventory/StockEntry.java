@@ -60,12 +60,26 @@ class StockEntry {
 		return availableQuantity;
 	}
 
+	int getInitialQuantity() {
+		return initialQuantity;
+	}
+
 	LocalDate getExpirationDate() {
 		return expirationDate;
 	}
 
 	Instant getCreatedAt() {
 		return createdAt;
+	}
+
+	void validateWithdrawal(int quantity, WithdrawalReason reason, LocalDate today) {
+		if (quantity <= 0) {
+			throw new InvalidWithdrawalException("A quantidade deve ser maior que zero.");
+		}
+		if (expirationDate.isBefore(today) && !reason.isAllowedForExpiredEntry()) {
+			throw new InvalidWithdrawalException(
+					"Entradas vencidas aceitam somente os motivos Perdi ou Venceu.");
+		}
 	}
 
 }

@@ -4,6 +4,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -36,5 +37,16 @@ class StockEntryController {
 			@RequestParam(defaultValue = "0") @Min(0) @Max(10_000) int page,
 			@RequestParam(defaultValue = "50") @Min(1) @Max(100) int size) {
 		return stockEntryService.listActive(page, size);
+	}
+
+	@GetMapping("/{entryId}")
+	StockEntryDetailsResponse details(@PathVariable @Min(1) long entryId) {
+		return stockEntryService.details(entryId);
+	}
+
+	@PostMapping("/{entryId}/withdrawals")
+	StockEntryDetailsResponse withdraw(@PathVariable @Min(1) long entryId,
+			@Valid @RequestBody WithdrawStockRequest request) {
+		return stockEntryService.withdraw(entryId, request);
 	}
 }

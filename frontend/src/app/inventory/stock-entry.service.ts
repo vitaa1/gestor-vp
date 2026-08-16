@@ -2,7 +2,13 @@ import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { AuthService } from '../auth/auth.service';
-import { CreateStockEntry, StockEntry, StockEntryPage } from './stock-entry.model';
+import {
+  CreateStockEntry,
+  StockEntry,
+  StockEntryDetailsModel,
+  StockEntryPage,
+  WithdrawStock,
+} from './stock-entry.model';
 
 @Injectable({ providedIn: 'root' })
 export class StockEntryService {
@@ -21,5 +27,19 @@ export class StockEntryService {
     return this.http.post<StockEntry>(this.resourceUrl, entry, {
       headers: this.authService.headers(),
     });
+  }
+
+  details(entryId: number): Observable<StockEntryDetailsModel> {
+    return this.http.get<StockEntryDetailsModel>(`${this.resourceUrl}/${entryId}`, {
+      headers: this.authService.headers(),
+    });
+  }
+
+  withdraw(entryId: number, withdrawal: WithdrawStock): Observable<StockEntryDetailsModel> {
+    return this.http.post<StockEntryDetailsModel>(
+      `${this.resourceUrl}/${entryId}/withdrawals`,
+      withdrawal,
+      { headers: this.authService.headers() },
+    );
   }
 }

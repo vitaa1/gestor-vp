@@ -78,6 +78,16 @@ main {
   gap: clamp(2.5rem, 7vw, 4rem);
 }
 
+.action-message {
+  margin: -1.5rem 0;
+  padding: 0.85rem 1rem;
+  border: 1px solid #99c5a6;
+  border-radius: 0.75rem;
+  color: #174b2a;
+  background: #edf8f0;
+  font-weight: 700;
+}
+
 .hero {
   max-width: 45rem;
 }

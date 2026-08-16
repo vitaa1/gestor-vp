@@ -49,4 +49,24 @@ class StockMovement {
 		this.createdAt = createdAt;
 	}
 
+	StockMovement(StockEntry stockEntry, int quantity, WithdrawalReason reason, Instant createdAt) {
+		this.stockEntry = stockEntry;
+		this.movementType = MovementType.WITHDRAWAL;
+		this.quantity = quantity;
+		this.reason = reason.name();
+		this.createdAt = createdAt;
+	}
+
+	MovementType getMovementType() {
+		return movementType;
+	}
+
+	int getQuantity() {
+		return quantity;
+	}
+
+	String getReason() {
+		return reason;
+	}
+
 }

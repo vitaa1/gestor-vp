@@ -14,4 +14,14 @@ class InventoryExceptionHandler {
 	ProblemDetail handleConstraintViolation() {
 		return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, "Os parâmetros informados são inválidos.");
 	}
+
+	@ExceptionHandler(StockEntryNotFoundException.class)
+	ProblemDetail handleNotFound(StockEntryNotFoundException exception) {
+		return ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, exception.getMessage());
+	}
+
+	@ExceptionHandler(InvalidWithdrawalException.class)
+	ProblemDetail handleInvalidWithdrawal(InvalidWithdrawalException exception) {
+		return ProblemDetail.forStatusAndDetail(HttpStatus.UNPROCESSABLE_ENTITY, exception.getMessage());
+	}
 }

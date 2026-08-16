@@ -1,0 +1,122 @@
+<dialog
+  #detailsDialog
+  class="details-panel"
+  aria-labelledby="details-title"
+  (cancel)="handleCancel($event)"
+  (close)="handleClosed()"
+>
+  <header>
+    <div>
+      <p class="eyebrow">Entrada de estoque</p>
+      <h2 id="details-title">{{ entry()?.productName || 'Detalhes' }}</h2>
+    </div>
+    <button
+      type="button"
+      autofocus
+      aria-label="Fechar detalhes"
+      [disabled]="withdrawalPending()"
+      (click)="requestClose()"
+    >
+      ×
+    </button>
+  </header>
+
+  <p class="visually-hidden" aria-live="polite">
+    {{ confirming() ? 'Revise o resumo e confirme ou cancele a retirada.' : '' }}
+  </p>
+
+  @if (loading()) {
+    <p class="panel-state" aria-live="polite">Carregando detalhes…</p>
+  } @else if (errorMessage()) {
+    <p class="panel-state panel-state--error" role="alert">{{ errorMessage() }}</p>
+  } @else if (entry(); as selectedEntry) {
+    <dl class="entry-facts">
+      <div>
+        <dt>Quantidade inicial</dt>
+        <dd>
+          {{ selectedEntry.initialQuantity }}
+          {{ selectedEntry.initialQuantity === 1 ? 'unidade' : 'unidades' }}
+        </dd>
+      </div>
+      <div>
+        <dt>Quantidade disponível</dt>
+        <dd>
+          {{ selectedEntry.availableQuantity }}
+          {{ selectedEntry.availableQuantity === 1 ? 'unidade' : 'unidades' }}
+        </dd>
+      </div>
+      <div>
+        <dt>Validade</dt>
+        <dd>{{ formatDate(selectedEntry.expirationDate) }}</dd>
+      </div>
+      <div>
+        <dt>Situação</dt>
+        <dd>{{ selectedEntry.statusLabel }}</dd>
+      </div>
+    </dl>
+
+    @if (selectedEntry.availableQuantity === 0) {
+      <p class="closed-entry">Esta entrada está encerrada e disponível somente para consulta.</p>
+    } @else if (!confirming()) {
+      <form class="withdrawal-form" (submit)="$event.preventDefault(); reviewWithdrawal()">
+        <h3>Retirar unidades</h3>
+        <label for="withdrawal-quantity">Quantidade</label>
+        <input
+          id="withdrawal-quantity"
+          type="number"
+          min="1"
+          step="1"
+          [max]="selectedEntry.availableQuantity"
+          [disabled]="withdrawalPending()"
+          (input)="updateQuantity($event)"
+        />
+        <label for="withdrawal-reason">Motivo</label>
+        <select
+          id="withdrawal-reason"
+          [disabled]="withdrawalPending()"
+          (change)="updateReason($event)"
+        >
+          @for (reasonOption of availableReasons(); track reasonOption.value) {
+            <option [value]="reasonOption.value">{{ reasonOption.label }}</option>
+          }
+        </select>
+        @if (validationMessage()) {
+          <p class="field-error" role="alert">{{ validationMessage() }}</p>
+        }
+        <button class="primary-action" data-action="review" type="submit">Revisar retirada</button>
+      </form>
+    } @else {
+      <section class="confirmation" aria-labelledby="confirmation-title">
+        <h3 id="confirmation-title">Confirme a retirada</h3>
+        <p>
+          Retirar <strong>{{ quantity() }} unidades</strong> de
+          <strong>{{ selectedEntry.productName }}</strong> pelo motivo
+          <strong>{{ reasonLabel() }}</strong
+          >?
+        </p>
+        @if (withdrawalError()) {
+          <p class="field-error" role="alert">{{ withdrawalError() }}</p>
+        }
+        <div class="confirmation__actions">
+          <button
+            data-action="cancel"
+            type="button"
+            [disabled]="withdrawalPending()"
+            (click)="cancelConfirmation()"
+          >
+            Cancelar
+          </button>
+          <button
+            class="primary-action"
+            data-action="confirm"
+            type="button"
+            [disabled]="withdrawalPending()"
+            (click)="confirmWithdrawal()"
+          >
+            {{ withdrawalPending() ? 'Retirando…' : 'Confirmar retirada' }}
+          </button>
+        </div>
+      </section>
+    }
+  }
+</dialog>
