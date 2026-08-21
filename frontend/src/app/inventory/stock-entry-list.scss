@@ -23,7 +23,7 @@ section {
 }
 
 .eyebrow {
-  color: var(--color-primary);
+  color: var(--color-accent);
   font-size: 0.8rem;
   font-weight: 800;
   letter-spacing: 0.08em;
@@ -34,7 +34,7 @@ section {
   padding: 0.4rem 0.7rem;
   border-radius: 999px;
   color: var(--color-muted);
-  background: #e8efe9;
+  background: #e7eef5;
   font-size: 0.875rem;
   font-weight: 700;
   white-space: nowrap;
@@ -56,10 +56,10 @@ section {
   gap: 1.25rem;
   padding: 1rem 1.1rem;
   border: 1px solid var(--color-border);
-  border-left: 0.4rem solid #7b9283;
+  border-left: 0.4rem solid #75899b;
   border-radius: 0.9rem;
   background: var(--color-surface);
-  box-shadow: 0 0.35rem 1rem rgb(30 66 45 / 5%);
+  box-shadow: 0 0.35rem 1rem rgb(14 41 70 / 7%);
 }
 
 .entry-card__details {
@@ -132,7 +132,7 @@ section {
 
 .state-card {
   padding: 1.5rem;
-  border: 1px dashed #b8c8be;
+  border: 1px dashed #aebdca;
   border-radius: 1rem;
   color: var(--color-muted);
   background: rgb(255 255 255 / 65%);

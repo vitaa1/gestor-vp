@@ -6,7 +6,7 @@
 .development-banner {
   padding: 0.55rem 1rem;
   color: #fff;
-  background: #6d3b00;
+  background: var(--color-accent-strong);
   font-size: 0.8rem;
   font-weight: 700;
   text-align: center;
@@ -65,7 +65,7 @@ header {
   place-items: center;
   border-radius: 0.75rem;
   color: #fff;
-  background: var(--color-primary);
+  background: var(--color-accent);
   font-size: 0.8rem;
   font-weight: 900;
 }
@@ -107,22 +107,22 @@ main {
 @media (hover: hover) {
   .primary-navigation button:not([aria-current='page']):hover {
     color: var(--color-primary-strong);
-    background: #edf8f0;
+    background: #eaf1f8;
   }
 }
 
 .primary-navigation button:focus-visible {
-  outline: 3px solid rgb(40 117 72 / 30%);
+  outline: 3px solid var(--color-focus);
   outline-offset: 2px;
 }
 
 .action-message {
   margin: -1.5rem 0;
   padding: 0.85rem 1rem;
-  border: 1px solid #99c5a6;
+  border: 1px solid #9db7d2;
   border-radius: 0.75rem;
-  color: #174b2a;
-  background: #edf8f0;
+  color: var(--color-primary-strong);
+  background: #eaf1f8;
   font-weight: 700;
 }
 
@@ -179,7 +179,7 @@ main {
 .product-search input:focus,
 .product-search select:focus,
 .product-search button:focus-visible {
-  outline: 3px solid rgb(40 117 72 / 25%);
+  outline: 3px solid var(--color-focus);
   outline-offset: 2px;
 }
 
@@ -189,7 +189,7 @@ main {
 
 .eyebrow {
   margin: 0 0 0.75rem;
-  color: var(--color-primary);
+  color: var(--color-accent);
   font-size: 0.8rem;
   font-weight: 800;
   letter-spacing: 0.08em;

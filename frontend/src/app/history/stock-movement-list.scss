@@ -27,7 +27,7 @@
 
 .eyebrow {
   margin-bottom: 0.45rem !important;
-  color: var(--color-primary);
+  color: var(--color-accent);
   font-size: 0.75rem;
   font-weight: 800;
   letter-spacing: 0.08em;
@@ -87,13 +87,13 @@
 
 .movement-type {
   padding: 0.25rem 0.55rem;
-  color: #174b2a;
-  background: #dff2e5;
+  color: var(--color-primary-strong);
+  background: #e2edf7;
 }
 
 .movement-type--withdrawal {
-  color: #6d3b00;
-  background: #fff0d6;
+  color: var(--color-accent-strong);
+  background: #fff0e3;
 }
 
 .closed-label {
@@ -188,7 +188,7 @@
 .movement-row__details:focus-visible,
 .load-more:focus-visible,
 .state-card button:focus-visible {
-  outline: 3px solid rgb(40 117 72 / 30%);
+  outline: 3px solid var(--color-focus);
   outline-offset: 2px;
 }
 
