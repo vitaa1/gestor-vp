@@ -157,6 +157,10 @@ quantidade, data e motivo quando aplicável.
     informado.
 17. Entradas encerradas permanecem disponíveis no histórico em modo somente
     leitura.
+18. A situação da validade e a contagem de dias consideram a data local do
+    operador, obtida automaticamente do dispositivo que acessa o sistema.
+19. As regras que autorizam retiradas de entradas vencidas consideram a data
+    operacional do estabelecimento, definida por configuração protegida.
 
 ## 7. Histórias de usuário
 

@@ -1,5 +1,8 @@
 package io.github.vitaa1.vencefacil.inventory;
 
+import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
@@ -16,19 +19,23 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
+import org.springframework.context.annotation.Primary;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.RequestPostProcessor;
 
 import io.github.vitaa1.vencefacil.TestcontainersConfiguration;
 
-@Import(TestcontainersConfiguration.class)
+@Import({ TestcontainersConfiguration.class, StockEntryControllerTests.FixedTimeConfiguration.class })
 @AutoConfigureMockMvc
 @SpringBootTest(properties = {
 		"app.security.username=test-operator",
-		"app.security.password=test-password"
+		"app.security.password=test-password",
+		"app.inventory.default-time-zone=UTC"
 })
 class StockEntryControllerTests {
 
@@ -198,6 +205,45 @@ class StockEntryControllerTests {
 	}
 
 	@Test
+	void usesTheOperatorsTimeZoneForStatusWithoutChangingTrustedWithdrawalRules() throws Exception {
+		long entryId = createdEntryId("Bolo de Milho", 3, "2026-08-21", "America/Sao_Paulo");
+
+		mockMvc.perform(get("/api/v1/stock-entries/{entryId}", entryId)
+				.with(operator())
+				.header("X-User-Time-Zone", "America/Sao_Paulo"))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.status").value("ATTENTION"))
+			.andExpect(jsonPath("$.daysUntilExpiration").value(0));
+
+		mockMvc.perform(get("/api/v1/stock-entries/{entryId}", entryId)
+				.with(operator())
+				.header("X-User-Time-Zone", "UTC"))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.status").value("EXPIRED"))
+			.andExpect(jsonPath("$.daysUntilExpiration").value(-1));
+
+		mockMvc.perform(post("/api/v1/stock-entries/{entryId}/withdrawals", entryId)
+				.with(operator())
+				.header("X-User-Time-Zone", "America/Sao_Paulo")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("""
+						{"quantity":1,"reason":"SOLD"}
+						"""))
+			.andExpect(status().isUnprocessableEntity());
+
+		org.assertj.core.api.Assertions.assertThat(stockMovementRepository.count()).isEqualTo(1);
+	}
+
+	@Test
+	void rejectsAnInvalidUserTimeZone() throws Exception {
+		mockMvc.perform(get("/api/v1/stock-entries")
+				.with(operator())
+				.header("X-User-Time-Zone", "Mars/Olympus"))
+			.andExpect(status().isBadRequest())
+			.andExpect(jsonPath("$.detail").value("O fuso horário informado é inválido."));
+	}
+
+	@Test
 	void rejectsInvalidWithdrawalDataAndUnknownEntries() throws Exception {
 		long entryId = createdEntryId("Pão de Forma", 8, "2030-01-01");
 
@@ -273,6 +319,22 @@ class StockEntryControllerTests {
 		return com.jayway.jsonpath.JsonPath.<Integer>read(response, "$.id").longValue();
 	}
 
+	private long createdEntryId(String productName, int quantity, String expirationDate, String timeZone)
+			throws Exception {
+		String response = mockMvc.perform(post("/api/v1/stock-entries")
+				.with(operator())
+				.header("X-User-Time-Zone", timeZone)
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("""
+						{"productName":"%s","quantity":%d,"expirationDate":"%s"}
+						""".formatted(productName, quantity, expirationDate)))
+			.andExpect(status().isCreated())
+			.andReturn()
+			.getResponse()
+			.getContentAsString();
+		return com.jayway.jsonpath.JsonPath.<Integer>read(response, "$.id").longValue();
+	}
+
 	private int withdrawalStatus(long entryId, int quantity) {
 		try {
 			return mockMvc.perform(post("/api/v1/stock-entries/{entryId}/withdrawals", entryId)
@@ -292,5 +354,15 @@ class StockEntryControllerTests {
 
 	private void assertThatSingleProductWasCreated() {
 		org.assertj.core.api.Assertions.assertThat(productRepository.count()).isEqualTo(1);
+	}
+
+	@TestConfiguration(proxyBeanMethods = false)
+	static class FixedTimeConfiguration {
+
+		@Bean
+		@Primary
+		Clock fixedClock() {
+			return Clock.fixed(Instant.parse("2026-08-22T00:30:00Z"), ZoneOffset.UTC);
+		}
 	}
 }

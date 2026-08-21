@@ -12,6 +12,8 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import io.github.vitaa1.vencefacil.inventory.BusinessDateProvider;
+
 @Service
 class DemoDataService {
 
@@ -20,12 +22,15 @@ class DemoDataService {
 	private static final String ADVISORY_LOCK_NAME = "vence-facil-demo-reset";
 
 	private final Clock clock;
+	private final BusinessDateProvider businessDateProvider;
 	private final DemoProperties properties;
 	private final JdbcTemplate jdbcTemplate;
 	private volatile Instant nextResetAt = Instant.EPOCH;
 
-	DemoDataService(Clock clock, DemoProperties properties, JdbcTemplate jdbcTemplate) {
+	DemoDataService(Clock clock, BusinessDateProvider businessDateProvider, DemoProperties properties,
+			JdbcTemplate jdbcTemplate) {
 		this.clock = clock;
+		this.businessDateProvider = businessDateProvider;
 		this.properties = properties;
 		this.jdbcTemplate = jdbcTemplate;
 	}
@@ -79,7 +84,7 @@ class DemoDataService {
 		jdbcTemplate.update("delete from stock_entries");
 		jdbcTemplate.update("delete from products");
 
-		LocalDate today = LocalDate.now(clock);
+		LocalDate today = businessDateProvider.defaultDate();
 		seedEntry("Iogurte Natural", "iogurte natural", 6, today.minusDays(2), now);
 		seedEntry("Leite Integral", "leite integral", 12, today.plusDays(4), now);
 		seedEntry("Pão de Forma", "pão de forma", 8, today.plusDays(18), now);

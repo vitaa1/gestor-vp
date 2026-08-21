@@ -28,7 +28,7 @@ class StockEntryService {
 	}
 
 	@Transactional
-	StockEntryResponse create(CreateStockEntryRequest request) {
+	StockEntryResponse create(CreateStockEntryRequest request, LocalDate today) {
 		String productName = normalizeWhitespace(request.productName());
 		String normalizedName = productName.toLowerCase(Locale.ROOT);
 		Instant now = clock.instant();
@@ -40,12 +40,11 @@ class StockEntryService {
 				new StockEntry(product, request.quantity(), request.expirationDate(), now));
 		stockMovementRepository.save(new StockMovement(entry, MovementType.ENTRY, request.quantity(), now));
 
-		return StockEntryResponse.from(entry, LocalDate.now(clock));
+		return StockEntryResponse.from(entry, today);
 	}
 
 	@Transactional(readOnly = true)
-	StockEntryPageResponse listActive(int page, int size) {
-		LocalDate today = LocalDate.now(clock);
+	StockEntryPageResponse listActive(int page, int size, LocalDate today) {
 		PageRequest pageRequest = PageRequest.of(page, size, Sort.by(
 				Sort.Order.asc("expirationDate"),
 				Sort.Order.asc("createdAt"),
@@ -57,15 +56,16 @@ class StockEntryService {
 	}
 
 	@Transactional(readOnly = true)
-	StockEntryDetailsResponse details(long entryId) {
+	StockEntryDetailsResponse details(long entryId, LocalDate today) {
 		StockEntry entry = findEntry(entryId);
-		return StockEntryDetailsResponse.from(entry, LocalDate.now(clock));
+		return StockEntryDetailsResponse.from(entry, today);
 	}
 
 	@Transactional
-	StockEntryDetailsResponse withdraw(long entryId, WithdrawStockRequest request) {
+	StockEntryDetailsResponse withdraw(long entryId, WithdrawStockRequest request, LocalDate establishmentDate,
+			LocalDate operatorDate) {
 		StockEntry entry = findEntry(entryId);
-		entry.validateWithdrawal(request.quantity(), request.reason(), LocalDate.now(clock));
+		entry.validateWithdrawal(request.quantity(), request.reason(), establishmentDate);
 
 		if (stockEntryRepository.withdrawIfAvailable(entryId, request.quantity()) == 0) {
 			throw new InvalidWithdrawalException("A quantidade informada supera o saldo disponível.");
@@ -74,7 +74,7 @@ class StockEntryService {
 		StockEntry updatedEntry = findEntry(entryId);
 		stockMovementRepository.save(
 				new StockMovement(updatedEntry, request.quantity(), request.reason(), clock.instant()));
-		return StockEntryDetailsResponse.from(updatedEntry, LocalDate.now(clock));
+		return StockEntryDetailsResponse.from(updatedEntry, operatorDate);
 	}
 
 	private StockEntry findEntry(long entryId) {

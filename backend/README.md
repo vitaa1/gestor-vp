@@ -47,7 +47,8 @@ Os testes de integração utilizam Testcontainers e exigem o Docker em execuçã
 ```
 
 As configurações aceitam `DB_URL`, `DB_USERNAME`, `DB_PASSWORD`, `SERVER_PORT`,
-`APP_USERNAME` e `APP_PASSWORD` como variáveis de ambiente. Em publicação,
+`APP_USERNAME`, `APP_PASSWORD` e `APP_DEFAULT_TIME_ZONE` como variáveis de
+ambiente. Em publicação,
 `SPRING_FLYWAY_URL`, `SPRING_FLYWAY_USER` e `SPRING_FLYWAY_PASSWORD` fornecem
 uma credencial de migration separada do usuário de runtime. A API não inicia
 sem uma conta de operador configurada e deve ser publicada somente por HTTPS.

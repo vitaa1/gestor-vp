@@ -112,6 +112,7 @@ Railway e nunca no repositório:
 | `SPRING_FLYWAY_PASSWORD`              | senha exclusiva de migration                                        |
 | `APP_USERNAME`                        | usuário compartilhado da demonstração                               |
 | `APP_PASSWORD`                        | senha exclusiva da demonstração, com 12 a 200 caracteres            |
+| `APP_DEFAULT_TIME_ZONE`               | `America/Sao_Paulo` como fallback para clientes antigos ou externos |
 | `DEMO_MODE`                           | `true`                                                              |
 | `DEMO_INSTANCE_ID`                    | identificador aleatório e exclusivo deste banco                     |
 | `DEMO_RESET_AFTER`                    | `24h`                                                               |
@@ -126,6 +127,12 @@ Railway e nunca no repositório:
 Nunca reutilize essas senhas em desenvolvimento ou em outra implantação. O
 Railway fornece HTTPS, injeta `PORT` e encaminha o endereço validado do cliente
 em `X-Real-IP`.
+
+O frontend envia automaticamente o fuso IANA informado pelo navegador em cada
+requisição de estoque. `APP_DEFAULT_TIME_ZONE` não substitui essa detecção; ele
+impede que clientes sem o cabeçalho dependam do fuso do servidor e define a
+data operacional confiável para regras de retirada. O cabeçalho controlado pelo
+cliente altera apenas a classificação e a contagem de dias exibidas.
 
 O ambiente de demonstração atual está publicado em
 [vence-facil-production.up.railway.app](https://vence-facil-production.up.railway.app/).
