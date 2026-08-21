@@ -95,13 +95,19 @@ do incremento e a nova rota autenticada rejeitou acesso anônimo com `401`.
 - [x] paginar a consulta;
 - [x] permitir consultar entradas encerradas em modo somente leitura.
 
-### 5. Consulta de produtos
+### 5. Consulta de produtos — concluído
 
-- criar a área **Produtos**;
-- buscar parte do nome ignorando caixa, acentos e espaços excedentes;
-- combinar a busca com os filtros **Todos**, **Vencido**, **Atenção**,
+O PR #17 entregou este incremento com paginação por cursor, migration Flyway
+V5 compatível com o rollout, 51 testes de backend, 39 testes de frontend e o
+fluxo Playwright aprovado em desktop e celular. O merge `bb7ae1f` está na
+`main` publicada pelo Railway: o healthcheck respondeu `200` com status `UP` e
+o bundle Angular `main-FRG2PRMQ.js` contém a nova área **Produtos**.
+
+- [x] criar a área **Produtos**;
+- [x] buscar parte do nome ignorando caixa, acentos e espaços excedentes;
+- [x] combinar a busca com os filtros **Todos**, **Vencido**, **Atenção**,
   **Fique de olho** e **Tudo certo**;
-- mostrar uma mensagem amigável quando não houver resultados.
+- [x] mostrar uma mensagem amigável quando não houver resultados.
 
 ### 6. Detalhes opcionais
 

@@ -195,6 +195,8 @@ A versão publicada permite:
 - retirar unidades pelos motivos **Vendi**, **Usei**, **Doei**, **Perdi** ou
   **Venceu**, depois de revisar e confirmar a operação;
 - encerrar uma entrada quando a quantidade disponível chega a zero;
+- buscar na área **Produtos** por parte do nome, ignorando caixa, acentos e
+  espaços excedentes, e combinar a busca com filtros de situação;
 - consultar entradas e retiradas no **Histórico**, com os registros recentes
   primeiro e carregamento paginado;
 - abrir pelo Histórico uma entrada encerrada em modo somente leitura.
