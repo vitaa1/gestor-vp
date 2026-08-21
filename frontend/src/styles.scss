@@ -1,12 +1,16 @@
 :root {
-  --color-primary: #287548;
-  --color-primary-strong: #1f603a;
-  --color-ink: #173d29;
-  --color-muted: #53675b;
+  --color-primary: #173b63;
+  --color-primary-strong: #0e2946;
+  --color-accent: #a43d08;
+  --color-accent-strong: #752604;
+  --color-focus: #173b63;
+  --color-ink: #142a3d;
+  --color-muted: #526574;
   --color-danger: #b42318;
-  --color-border: #d9e5dd;
+  --color-border: #d5e0ea;
   --color-surface: #ffffff;
-  --shadow-card: 0 1rem 3rem rgb(30 66 45 / 8%);
+  --color-surface-soft: #f3f7fb;
+  --shadow-card: 0 1rem 3rem rgb(14 41 70 / 10%);
 }
 
 *,
@@ -24,7 +28,7 @@ html {
     BlinkMacSystemFont,
     'Segoe UI',
     sans-serif;
-  background: #f4f8f5;
+  background: var(--color-surface-soft);
 }
 
 body {
@@ -32,7 +36,9 @@ body {
   min-width: 20rem;
   min-height: 100dvh;
   background:
-    radial-gradient(circle at 100% 0%, rgb(190 224 200 / 40%), transparent 30rem), #f4f8f5;
+    radial-gradient(circle at 100% 0%, rgb(244 181 126 / 24%), transparent 25rem),
+    radial-gradient(circle at 0% 30%, rgb(126 166 207 / 18%), transparent 30rem),
+    var(--color-surface-soft);
 }
 
 button,

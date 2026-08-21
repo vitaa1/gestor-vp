@@ -3,7 +3,7 @@
 }
 
 .details-panel::backdrop {
-  background: rgb(16 35 23 / 58%);
+  background: rgb(10 29 48 / 62%);
 }
 
 .details-panel {
@@ -15,7 +15,7 @@
   border: 0;
   border-radius: 1.25rem;
   background: var(--color-surface);
-  box-shadow: 0 1.5rem 4rem rgb(9 30 16 / 28%);
+  box-shadow: 0 1.5rem 4rem rgb(8 26 43 / 30%);
 }
 
 .visually-hidden {
@@ -64,7 +64,7 @@ header button:disabled {
 }
 
 .eyebrow {
-  color: var(--color-primary);
+  color: var(--color-accent);
   font-size: 0.8rem;
   font-weight: 800;
   letter-spacing: 0.08em;

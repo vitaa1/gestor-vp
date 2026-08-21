@@ -26,7 +26,7 @@
   place-items: center;
   border-radius: 0.9rem;
   color: #fff;
-  background: var(--color-primary);
+  background: var(--color-accent);
   font-weight: 900;
 }
 
@@ -77,7 +77,7 @@ label {
 input {
   min-height: 3.25rem;
   padding: 0.75rem 0.9rem;
-  border: 1px solid #b8c8be;
+  border: 1px solid #aebdca;
   border-radius: 0.75rem;
   color: var(--color-ink);
   background: #fff;
@@ -87,13 +87,14 @@ input:hover:not(:disabled),
 input:focus,
 .password-control:hover input:not(:disabled) {
   border-color: var(--color-primary);
-  outline: 3px solid rgb(40 117 72 / 18%);
+  outline: 3px solid var(--color-focus);
+  outline-offset: 2px;
 }
 
 input:active:not(:disabled),
 .password-control:hover input:active:not(:disabled) {
   border-color: var(--color-primary-strong);
-  outline-color: rgb(40 117 72 / 32%);
+  outline-color: var(--color-primary-strong);
 }
 
 .password-control {
@@ -121,7 +122,7 @@ input:active:not(:disabled),
 }
 
 .password-control__toggle:hover:not(:disabled) {
-  background: rgb(40 117 72 / 10%);
+  background: rgb(23 59 99 / 10%);
 }
 
 .password-control__toggle:focus-visible {
