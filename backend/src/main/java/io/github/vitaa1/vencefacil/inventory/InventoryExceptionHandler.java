@@ -24,4 +24,9 @@ class InventoryExceptionHandler {
 	ProblemDetail handleInvalidWithdrawal(InvalidWithdrawalException exception) {
 		return ProblemDetail.forStatusAndDetail(HttpStatus.UNPROCESSABLE_ENTITY, exception.getMessage());
 	}
+
+	@ExceptionHandler(InvalidUserTimeZoneException.class)
+	ProblemDetail handleInvalidUserTimeZone(InvalidUserTimeZoneException exception) {
+		return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, exception.getMessage());
+	}
 }

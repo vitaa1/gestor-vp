@@ -15,6 +15,16 @@ A única identidade que acessa uma implantação durante o MVP, compartilhando a
 visão completa do estoque do estabelecimento.
 _Evitar_: Usuário, administrador
 
+**Data local do operador**:
+O dia civil no local em que o operador acessa a implantação, usado para exibir
+a situação da validade e a contagem de dias.
+_Evitar_: Data do servidor, horário do servidor
+
+**Data operacional do estabelecimento**:
+O dia civil no fuso configurado para o estabelecimento, usado nas regras que
+autorizam retiradas de entradas vencidas.
+_Evitar_: Data do operador, data do servidor
+
 **Produto**:
 A mercadoria identificada por um nome único e, quando informado, por um código
 de barras único, que reúne entradas de estoque com quantidades e validades
