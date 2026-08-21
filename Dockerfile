@@ -13,13 +13,13 @@ COPY backend/.mvn .mvn
 COPY backend/mvnw backend/pom.xml ./
 RUN chmod +x mvnw && ./mvnw --batch-mode dependency:go-offline
 COPY backend/src src
-COPY --from=frontend-build /workspace/frontend/dist/vence-facil-web/browser src/main/resources/static
+COPY --from=frontend-build /workspace/frontend/dist/gestor-vp-web/browser src/main/resources/static
 RUN ./mvnw --batch-mode -DskipTests package
 
 FROM eclipse-temurin:21-jre-alpine
-RUN addgroup -S vencefacil && adduser -S vencefacil -G vencefacil
+RUN addgroup -S gestorvp && adduser -S gestorvp -G gestorvp
 WORKDIR /app
-COPY --from=backend-build --chown=vencefacil:vencefacil /workspace/backend/target/vence-facil-api-*.jar app.jar
-USER vencefacil
+COPY --from=backend-build --chown=gestorvp:gestorvp /workspace/backend/target/gestor-vp-api-*.jar app.jar
+USER gestorvp
 EXPOSE 8080
 ENTRYPOINT ["java", "-XX:MaxRAMPercentage=75.0", "-jar", "/app/app.jar"]

@@ -122,6 +122,16 @@ describe('App', () => {
     expect(app).toBeTruthy();
   });
 
+  it('should show the gestorVP identity in the authenticated area', () => {
+    const fixture = TestBed.createComponent(App);
+    fixture.detectChanges();
+    const brand = (fixture.nativeElement as HTMLElement).querySelector('.brand');
+
+    expect(brand?.getAttribute('aria-label')).toBe('gestorVP — início');
+    expect(brand?.querySelector('span')?.textContent).toBe('gVP');
+    expect(brand?.querySelector('strong')?.textContent).toBe('gestorVP');
+  });
+
   it('should show the inventory ordered by expiration', async () => {
     const fixture = TestBed.createComponent(App);
     fixture.componentInstance.loadEntries();

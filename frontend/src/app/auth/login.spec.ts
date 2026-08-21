@@ -17,6 +17,15 @@ describe('Login', () => {
     }).compileComponents();
   });
 
+  it('should show the gestorVP identity', () => {
+    const fixture = TestBed.createComponent(Login);
+    fixture.detectChanges();
+    const compiled = fixture.nativeElement as HTMLElement;
+
+    expect(compiled.querySelector('.login-card__mark')?.textContent).toBe('gVP');
+    expect(compiled.querySelector('.eyebrow')?.textContent).toBe('gestorVP');
+  });
+
   it.each([
     [401, 'Usuário ou senha incorretos.'],
     [429, 'Muitas tentativas de login. Aguarde alguns minutos e tente novamente.'],

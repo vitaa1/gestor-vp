@@ -1,6 +1,6 @@
 # Frontend
 
-Aplicação web mobile-first do Vence Fácil, construída com Angular 21,
+Aplicação web mobile-first do gestorVP, construída com Angular 21,
 TypeScript e componentes standalone.
 
 ## Executar localmente

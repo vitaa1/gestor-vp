@@ -6,7 +6,7 @@
   },
   "newProjectRoot": "projects",
   "projects": {
-    "vence-facil-web": {
+    "gestor-vp-web": {
       "projectType": "application",
       "schematics": {
         "@schematics/angular:component": {
@@ -59,10 +59,10 @@
           "builder": "@angular/build:dev-server",
           "configurations": {
             "production": {
-              "buildTarget": "vence-facil-web:build:production"
+              "buildTarget": "gestor-vp-web:build:production"
             },
             "development": {
-              "buildTarget": "vence-facil-web:build:development"
+              "buildTarget": "gestor-vp-web:build:development"
             }
           },
           "defaultConfiguration": "development"

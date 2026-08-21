@@ -2,7 +2,7 @@
 
 ## 1. Visão
 
-O Vence Fácil é um sistema simples para ajudar pequenos comerciantes a
+O gestorVP é um sistema simples para ajudar pequenos comerciantes a
 controlar a validade dos produtos do estoque.
 
 O objetivo não é substituir um ERP. O produto deve resolver bem um único
