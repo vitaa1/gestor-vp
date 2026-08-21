@@ -49,6 +49,17 @@ validação operacional confirmou:
 Resta confirmar que o primeiro acesso após ao menos dez minutos de repouso
 reativa o serviço.
 
+Em 21/08/2026, a infraestrutura foi renomeada para gestorVP: repositório
+`vitaa1/gestor-vp`, projeto e serviço `gestor-vp`, domínio público
+`gestor-vp-production.up.railway.app` e papéis Neon `gestor_vp_migration` e
+`gestor_vp_runtime`. O cutover preservou os OIDs e privilégios dos papéis
+existentes. Após o deploy, healthcheck e aplicação responderam `200`; somente
+os dois papéis da aplicação, agora com os novos nomes, permaneceram, e os nomes
+anteriores não existem. O runtime retornou `false` para `SELECT`, `INSERT`,
+`UPDATE` e `DELETE` sobre `flyway_schema_history`. O PR #20 também publicou a
+identidade visual azul-escuro e laranja, confirmada no bundle de produção sem a
+paleta verde anterior.
+
 - gerar o build Angular e servi-lo pelo Spring Boot em um único container;
 - publicar a aplicação no Railway Free e o PostgreSQL no Neon Free;
 - configurar HTTPS, healthcheck e conexão com o Neon usando

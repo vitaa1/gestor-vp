@@ -83,10 +83,10 @@ gestor-vp/
 consulta de detalhes e retirada de unidades publicados no ambiente de
 demonstração.
 
-O endereço público definitivo será informado depois que a infraestrutura
-externa for renomeada e o novo domínio do Railway for validado. Como o serviço
-usa o modo Serverless, o primeiro acesso após um período de inatividade pode
-levar alguns segundos.
+A versão atual está disponível em
+[gestor-vp-production.up.railway.app](https://gestor-vp-production.up.railway.app/).
+Como o serviço usa o modo Serverless do Railway, o primeiro acesso após um
+período de inatividade pode levar alguns segundos.
 
 ## Executar localmente
 
