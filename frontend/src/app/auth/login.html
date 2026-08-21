@@ -16,12 +16,39 @@
 
       <div class="field">
         <label for="password">Senha</label>
-        <input
-          id="password"
-          type="password"
-          formControlName="password"
-          autocomplete="current-password"
-        />
+        <div class="password-control">
+          <input
+            id="password"
+            [type]="passwordVisible() ? 'text' : 'password'"
+            formControlName="password"
+            autocomplete="current-password"
+          />
+          <button
+            class="password-control__toggle"
+            type="button"
+            [disabled]="submitting()"
+            [attr.aria-label]="passwordVisible() ? 'Ocultar senha' : 'Mostrar senha'"
+            [attr.aria-pressed]="passwordVisible()"
+            (click)="togglePasswordVisibility()"
+          >
+            @if (passwordVisible()) {
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path
+                  d="M12 5c-5.3 0-9.3 4.4-10.5 7 1.2 2.6 5.2 7 10.5 7s9.3-4.4 10.5-7C21.3 9.4 17.3 5 12 5Zm0 10.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7Z"
+                />
+                <circle cx="12" cy="12" r="1.6" />
+                <path class="password-control__slash" d="M4 4l16 16" />
+              </svg>
+            } @else {
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path
+                  d="M12 5c-5.3 0-9.3 4.4-10.5 7 1.2 2.6 5.2 7 10.5 7s9.3-4.4 10.5-7C21.3 9.4 17.3 5 12 5Zm0 10.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7Z"
+                />
+                <circle cx="12" cy="12" r="1.6" />
+              </svg>
+            }
+          </button>
+        </div>
         @if (form.controls.password.touched && form.controls.password.invalid) {
           <p class="field-error">Informe a senha.</p>
         }

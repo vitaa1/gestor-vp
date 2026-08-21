@@ -37,7 +37,7 @@ h1,
 }
 
 .eyebrow {
-  color: var(--color-primary);
+  color: var(--color-ink);
   font-size: 0.8rem;
   font-weight: 800;
   letter-spacing: 0.08em;
@@ -83,9 +83,63 @@ input {
   background: #fff;
 }
 
-input:focus {
+input:hover:not(:disabled),
+input:focus,
+.password-control:hover input:not(:disabled) {
   border-color: var(--color-primary);
   outline: 3px solid rgb(40 117 72 / 18%);
+}
+
+input:active:not(:disabled),
+.password-control:hover input:active:not(:disabled) {
+  border-color: var(--color-primary-strong);
+  outline-color: rgb(40 117 72 / 32%);
+}
+
+.password-control {
+  position: relative;
+}
+
+.password-control input {
+  width: 100%;
+  padding-right: 3.5rem;
+}
+
+.password-control__toggle {
+  position: absolute;
+  top: 50%;
+  right: 0.35rem;
+  display: grid;
+  width: 2.75rem;
+  min-height: 2.75rem;
+  padding: 0;
+  translate: 0 -50%;
+  place-items: center;
+  border-radius: 0.65rem;
+  color: var(--color-primary);
+  background: transparent;
+}
+
+.password-control__toggle:hover:not(:disabled) {
+  background: rgb(40 117 72 / 10%);
+}
+
+.password-control__toggle:focus-visible {
+  outline: 3px solid var(--color-primary-strong);
+  outline-offset: 2px;
+}
+
+.password-control__toggle svg {
+  width: 1.4rem;
+  height: 1.4rem;
+  fill: currentcolor;
+}
+
+.password-control__toggle .password-control__slash {
+  fill: none;
+  stroke: #fff;
+  stroke-linecap: round;
+  stroke-width: 3.5;
 }
 
 .field-error,

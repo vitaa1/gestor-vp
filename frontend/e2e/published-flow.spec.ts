@@ -10,12 +10,12 @@ test('logs in and creates an entry through the published application', async ({
 
   await expect(page.getByText('Versão em desenvolvimento')).toBeVisible();
   await page.getByLabel('Usuário').fill('invalid-operator');
-  await page.getByLabel('Senha').fill('invalid-password');
+  await page.getByLabel('Senha', { exact: true }).fill('invalid-password');
   await page.getByRole('button', { name: 'Entrar' }).click();
   await expect(page.getByText('Usuário ou senha incorretos.')).toBeVisible();
 
   await page.getByLabel('Usuário').fill(username);
-  await page.getByLabel('Senha').fill(password);
+  await page.getByLabel('Senha', { exact: true }).fill(password);
   await page.getByRole('button', { name: 'Entrar' }).click();
   await expect(
     page.getByRole('heading', { name: 'O que vence primeiro aparece primeiro.' }),
