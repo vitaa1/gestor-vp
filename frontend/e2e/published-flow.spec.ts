@@ -1,7 +1,29 @@
-import { expect, test } from '@playwright/test';
+import { expect, Page, test } from '@playwright/test';
 
 const username = process.env['E2E_USERNAME'] ?? 'operador';
 const password = process.env['E2E_PASSWORD'] ?? 'troque-esta-senha-local';
+
+async function expectMobileLayoutToFit(page: Page): Promise<void> {
+  const layout = await page.evaluate(() => {
+    const clientWidth = document.documentElement.clientWidth;
+    const overflowingElements = [...document.body.querySelectorAll<HTMLElement>('*')]
+      .filter((element) => {
+        const bounds = element.getBoundingClientRect();
+        return bounds.width > 0 && (bounds.left < -1 || bounds.right > clientWidth + 1);
+      })
+      .map((element) => `${element.tagName.toLowerCase()}#${element.id}.${element.className}`)
+      .slice(0, 10);
+
+    return {
+      clientWidth,
+      scrollWidth: document.documentElement.scrollWidth,
+      overflowingElements,
+    };
+  });
+
+  expect(layout.scrollWidth).toBe(layout.clientWidth);
+  expect(layout.overflowingElements).toEqual([]);
+}
 
 test('completes the inventory and history flow through the published application', async ({
   page,
@@ -22,14 +44,32 @@ test('completes the inventory and history flow through the published application
   await expect(
     page.getByRole('heading', { name: 'O que vence primeiro aparece primeiro.' }),
   ).toBeVisible();
+  if (testInfo.project.name === 'mobile-chromium') {
+    await expectMobileLayoutToFit(page);
+  }
 
   const runId = Date.now().toString();
   const productName = `Produto E2E ${testInfo.project.name} ${runId}`;
   const barcode = `${runId}${testInfo.project.name === 'mobile-chromium' ? '2' : '1'}`;
+  if (testInfo.project.name === 'mobile-chromium') {
+    const formCardBounds = await page.locator('.form-card').boundingBox();
+    const expirationDateBounds = await page.getByLabel('Data de validade').boundingBox();
+
+    expect(formCardBounds).not.toBeNull();
+    expect(expirationDateBounds).not.toBeNull();
+    expect(expirationDateBounds!.x).toBeGreaterThanOrEqual(formCardBounds!.x);
+    expect(expirationDateBounds!.x + expirationDateBounds!.width).toBeLessThanOrEqual(
+      formCardBounds!.x + formCardBounds!.width,
+    );
+  }
   await page.getByLabel('Nome do produto').fill(productName);
   await page.getByLabel('Quantidade').fill('3');
-  await page.getByLabel('Data de validade').fill('2035-12-31');
+  await page.getByLabel('Data de validade').fill('31122035');
+  await expect(page.getByLabel('Data de validade')).toHaveValue('31/12/2035');
   await page.locator('details.optional-details').getByText('Mais detalhes').click();
+  if (testInfo.project.name === 'mobile-chromium') {
+    await expectMobileLayoutToFit(page);
+  }
   await page.getByLabel('Código de barras').fill(barcode);
   await page.getByLabel('Categoria').fill('Teste E2E');
   await page.getByLabel('Preço de custo unitário').fill('18.75');
@@ -48,6 +88,9 @@ test('completes the inventory and history flow through the published application
   await productSearch.getByRole('button', { name: 'Buscar' }).click();
   entryCard = page.locator('.entry-card').filter({ hasText: productName });
   await expect(entryCard).toBeVisible();
+  if (testInfo.project.name === 'mobile-chromium') {
+    await expectMobileLayoutToFit(page);
+  }
 
   await entryCard.getByRole('button', { name: 'Ver detalhes' }).click();
   const activeDetailsDialog = page.getByRole('dialog');
@@ -56,6 +99,9 @@ test('completes the inventory and history flow through the published application
   await expect(activeDetailsDialog.getByText('R$ 18,75')).toBeVisible();
   await expect(activeDetailsDialog.getByText('Fornecedor E2E')).toBeVisible();
   await expect(activeDetailsDialog.getByText('LOTE-E2E')).toBeVisible();
+  if (testInfo.project.name === 'mobile-chromium') {
+    await expectMobileLayoutToFit(page);
+  }
   await page.locator('#withdrawal-quantity').fill('3');
   await page.locator('#withdrawal-reason').selectOption('USED');
   await page.getByRole('button', { name: 'Revisar retirada' }).click();
@@ -69,6 +115,9 @@ test('completes the inventory and history flow through the published application
   await expect(productMovements).toHaveCount(2);
   await expect(productMovements.first()).toContainText('Retirada');
   await expect(productMovements.first()).toContainText('Usei');
+  if (testInfo.project.name === 'mobile-chromium') {
+    await expectMobileLayoutToFit(page);
+  }
 
   await productMovements
     .first()
@@ -80,10 +129,7 @@ test('completes the inventory and history flow through the published application
   ).toBeVisible();
   await expect(detailsDialog.getByRole('heading', { name: productName })).toBeVisible();
   await expect(detailsDialog.getByRole('heading', { name: 'Retirar unidades' })).toHaveCount(0);
-
-  const viewportMetrics = await page.evaluate(() => ({
-    clientWidth: document.documentElement.clientWidth,
-    scrollWidth: document.documentElement.scrollWidth,
-  }));
-  expect(viewportMetrics.scrollWidth).toBe(viewportMetrics.clientWidth);
+  if (testInfo.project.name === 'mobile-chromium') {
+    await expectMobileLayoutToFit(page);
+  }
 });

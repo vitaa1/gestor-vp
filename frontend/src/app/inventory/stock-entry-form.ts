@@ -1,9 +1,34 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, ElementRef, inject, input, output, signal, viewChild } from '@angular/core';
-import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import {
+  AbstractControl,
+  NonNullableFormBuilder,
+  ReactiveFormsModule,
+  ValidationErrors,
+  Validators,
+} from '@angular/forms';
 import { finalize } from 'rxjs';
 import { StockEntry } from './stock-entry.model';
 import { StockEntryService } from './stock-entry.service';
+
+const BRAZILIAN_DATE_PATTERN = /^\d{2}\/\d{2}\/\d{4}$/;
+
+function existingBrazilianDate(control: AbstractControl<string>): ValidationErrors | null {
+  if (!BRAZILIAN_DATE_PATTERN.test(control.value)) {
+    return null;
+  }
+
+  const [dayText, monthText, yearText] = control.value.split('/');
+  const day = Number(dayText);
+  const month = Number(monthText);
+  const year = Number(yearText);
+  const leapYear = year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
+  const daysInMonth = [31, leapYear ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+
+  return year >= 1 && month >= 1 && month <= 12 && day >= 1 && day <= daysInMonth[month - 1]
+    ? null
+    : { invalidDate: true };
+}
 
 @Component({
   selector: 'app-stock-entry-form',
@@ -36,7 +61,10 @@ export class StockEntryForm {
         Validators.pattern(/^\d+$/),
       ],
     ],
-    expirationDate: ['', Validators.required],
+    expirationDate: [
+      '',
+      [Validators.required, Validators.pattern(BRAZILIAN_DATE_PATTERN), existingBrazilianDate],
+    ],
     barcode: ['', Validators.pattern(/^\d{8,14}$/)],
     category: ['', Validators.maxLength(120)],
     unitCost: [
@@ -71,7 +99,7 @@ export class StockEntryForm {
       .create({
         productName: value.productName.trim(),
         quantity: value.quantity,
-        expirationDate: value.expirationDate,
+        expirationDate: this.toIsoDate(value.expirationDate),
         barcode: this.optionalText(value.barcode),
         category: this.optionalText(value.category),
         unitCost: value.unitCost === '' ? null : Number(value.unitCost),
@@ -112,6 +140,43 @@ export class StockEntryForm {
   private optionalText(value: string): string | null {
     const trimmed = value.trim();
     return trimmed === '' ? null : trimmed;
+  }
+
+  formatExpirationDate(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const caret = input.selectionStart ?? input.value.length;
+    const digitsBeforeCaret = input.value.slice(0, caret).replace(/\D/g, '').length;
+    const digits = input.value.replace(/\D/g, '').slice(0, 8);
+    const maskedDate = [digits.slice(0, 2), digits.slice(2, 4), digits.slice(4, 8)]
+      .filter((part) => part !== '')
+      .join('/');
+
+    input.value = maskedDate;
+    this.form.controls.expirationDate.setValue(maskedDate, { emitEvent: false });
+    const maskedCaret = this.caretAfterDigits(maskedDate, digitsBeforeCaret);
+    input.setSelectionRange(maskedCaret, maskedCaret);
+  }
+
+  private caretAfterDigits(value: string, digitCount: number): number {
+    if (digitCount === 0) {
+      return 0;
+    }
+
+    let seenDigits = 0;
+    for (let index = 0; index < value.length; index += 1) {
+      if (/\d/.test(value[index])) {
+        seenDigits += 1;
+      }
+      if (seenDigits === digitCount) {
+        return index + 1;
+      }
+    }
+    return value.length;
+  }
+
+  private toIsoDate(value: string): string {
+    const [day, month, year] = value.split('/');
+    return `${year}-${month}-${day}`;
   }
 
   private revealFirstInvalidOptionalField(): void {
