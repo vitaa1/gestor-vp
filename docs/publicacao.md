@@ -135,10 +135,17 @@ impede que clientes sem o cabeçalho dependam do fuso do servidor e define a
 data operacional confiável para regras de retirada. O cabeçalho controlado pelo
 cliente altera apenas a classificação e a contagem de dias exibidas.
 
-O endereço definitivo do ambiente será registrado aqui depois que o cutover
-descrito na próxima seção for executado e validado. Até lá, não presuma que o
-slug do projeto corresponde ao domínio público efetivamente gerado pelo
-Railway.
+O ambiente de demonstração está publicado em
+[gestor-vp-production.up.railway.app](https://gestor-vp-production.up.railway.app/).
+
+O cutover para a identidade gestorVP foi concluído em 21/08/2026. O repositório
+passou a usar `vitaa1/gestor-vp`; projeto, serviço e domínio público foram
+renomeados no Railway sem romper Source, `main`, Auto Deploy ou **Wait for CI**.
+No Neon, os papéis existentes foram renomeados para `gestor_vp_migration` e
+`gestor_vp_runtime`, preservando ownership e privilégios pelos mesmos OIDs. O
+deploy subsequente respondeu `200` no healthcheck e na aplicação, e a consulta
+de privilégios confirmou que o runtime permanece sem `SELECT`, `INSERT`,
+`UPDATE` ou `DELETE` sobre `flyway_schema_history`.
 
 ### Renomear a implantação existente
 
