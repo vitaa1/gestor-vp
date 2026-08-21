@@ -3,8 +3,13 @@ export type ExpirationStatus = 'EXPIRED' | 'ATTENTION' | 'WATCH' | 'OK';
 export interface StockEntry {
   id: number;
   productName: string;
+  barcode: string | null;
+  category: string | null;
   quantity: number;
   expirationDate: string;
+  unitCost: number | null;
+  supplier: string | null;
+  batchNumber: string | null;
   status: ExpirationStatus;
   statusLabel: string;
   daysUntilExpiration: number;
@@ -15,6 +20,11 @@ export interface CreateStockEntry {
   productName: string;
   quantity: number;
   expirationDate: string;
+  barcode: string | null;
+  category: string | null;
+  unitCost: number | null;
+  supplier: string | null;
+  batchNumber: string | null;
 }
 
 export interface StockEntryPage {
@@ -31,9 +41,14 @@ export type WithdrawalReason = 'SOLD' | 'USED' | 'DONATED' | 'LOST' | 'EXPIRED';
 export interface StockEntryDetailsModel {
   id: number;
   productName: string;
+  barcode: string | null;
+  category: string | null;
   initialQuantity: number;
   availableQuantity: number;
   expirationDate: string;
+  unitCost: number | null;
+  supplier: string | null;
+  batchNumber: string | null;
   status: ExpirationStatus;
   statusLabel: string;
   daysUntilExpiration: number;

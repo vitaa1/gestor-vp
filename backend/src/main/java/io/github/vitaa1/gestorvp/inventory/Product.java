@@ -26,6 +26,12 @@ class Product {
 	@Column(name = "search_name", nullable = false, length = 120)
 	private String searchName;
 
+	@Column(length = 14)
+	private String barcode;
+
+	@Column(length = 120)
+	private String category;
+
 	@Column(name = "created_at", nullable = false)
 	private Instant createdAt;
 
@@ -40,6 +46,22 @@ class Product {
 
 	String getName() {
 		return name;
+	}
+
+	Long getId() {
+		return id;
+	}
+
+	String getSearchName() {
+		return searchName;
+	}
+
+	String getBarcode() {
+		return barcode;
+	}
+
+	String getCategory() {
+		return category;
 	}
 
 }

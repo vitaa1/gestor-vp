@@ -34,6 +34,10 @@ export class StockEntryDetails implements AfterViewInit {
   readonly confirming = signal(false);
   readonly validationMessage = signal('');
   private readonly dialog = viewChild.required<ElementRef<HTMLDialogElement>>('detailsDialog');
+  private readonly currencyFormatter = new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+  });
 
   private readonly allReasons: readonly ReasonOption[] = [
     { value: 'SOLD', label: 'Vendi' },
@@ -130,5 +134,19 @@ export class StockEntryDetails implements AfterViewInit {
   formatDate(value: string): string {
     const [year, month, day] = value.split('-');
     return `${day}/${month}/${year}`;
+  }
+
+  hasOptionalDetails(entry: StockEntryDetailsModel): boolean {
+    return Boolean(
+      entry.barcode ||
+      entry.category ||
+      entry.unitCost !== null ||
+      entry.supplier ||
+      entry.batchNumber,
+    );
+  }
+
+  formatCurrency(value: number): string {
+    return this.currencyFormatter.format(value).replace(/\u00a0/g, ' ');
   }
 }

@@ -51,8 +51,48 @@ form {
 }
 
 .field--wide,
+details,
 button {
   grid-column: 1 / -1;
+}
+
+.optional-details {
+  border: 1px solid var(--color-border);
+  border-radius: 0.8rem;
+  background: #f8fafc;
+}
+
+.optional-details summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  min-height: 3.25rem;
+  padding: 0.75rem 0.9rem;
+  color: var(--color-primary);
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.optional-details summary:focus-visible {
+  border-radius: 0.8rem;
+  outline: 3px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+.optional-details summary small {
+  color: var(--color-muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.optional-details__fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  padding: 0.25rem 0.9rem 1rem;
 }
 
 label {
@@ -137,7 +177,12 @@ button:disabled {
   }
 
   .field,
+  details,
   button {
     grid-column: 1;
+  }
+
+  .optional-details__fields {
+    grid-template-columns: 1fr;
   }
 }

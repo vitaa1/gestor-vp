@@ -25,6 +25,16 @@ class InventoryExceptionHandler {
 		return ProblemDetail.forStatusAndDetail(HttpStatus.UNPROCESSABLE_ENTITY, exception.getMessage());
 	}
 
+	@ExceptionHandler(BarcodeConflictException.class)
+	ProblemDetail handleBarcodeConflict(BarcodeConflictException exception) {
+		return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, exception.getMessage());
+	}
+
+	@ExceptionHandler(ProductCategoryConflictException.class)
+	ProblemDetail handleProductCategoryConflict(ProductCategoryConflictException exception) {
+		return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, exception.getMessage());
+	}
+
 	@ExceptionHandler(InvalidUserTimeZoneException.class)
 	ProblemDetail handleInvalidUserTimeZone(InvalidUserTimeZoneException exception) {
 		return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, exception.getMessage());

@@ -89,6 +89,175 @@ class StockEntryControllerTests {
 	}
 
 	@Test
+	void createsAnEntryWithOptionalProductAndStockDetails() throws Exception {
+		MvcResult result = mockMvc.perform(post("/api/v1/stock-entries")
+				.with(operator())
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("""
+						{
+						  "productName":"Café Especial",
+						  "quantity":6,
+						  "expirationDate":"2030-04-15",
+						  "barcode":"07891234567890",
+						  "category":" Mercearia ",
+						  "unitCost":18.75,
+						  "supplier":" Torrefação Central ",
+						  "batchNumber":" LOTE-2030-A "
+						}
+						"""))
+			.andExpect(status().isCreated())
+			.andExpect(jsonPath("$.barcode").value("07891234567890"))
+			.andExpect(jsonPath("$.category").value("Mercearia"))
+			.andExpect(jsonPath("$.unitCost").value(18.75))
+			.andExpect(jsonPath("$.supplier").value("Torrefação Central"))
+			.andExpect(jsonPath("$.batchNumber").value("LOTE-2030-A"))
+			.andReturn();
+		Number entryId = com.jayway.jsonpath.JsonPath.read(result.getResponse().getContentAsString(), "$.id");
+
+		mockMvc.perform(get("/api/v1/stock-entries/{entryId}", entryId).with(operator()))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.barcode").value("07891234567890"))
+			.andExpect(jsonPath("$.category").value("Mercearia"))
+			.andExpect(jsonPath("$.unitCost").value(18.75))
+			.andExpect(jsonPath("$.supplier").value("Torrefação Central"))
+			.andExpect(jsonPath("$.batchNumber").value("LOTE-2030-A"));
+	}
+
+	@Test
+	void enrichesAnExistingProductWithoutErasingDetailsWhenTheyAreOmitted() throws Exception {
+		createEntry("Aveia em Flocos", 2, "2030-01-10")
+			.andExpect(status().isCreated());
+
+		mockMvc.perform(post("/api/v1/stock-entries")
+				.with(operator())
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("""
+						{
+						  "productName":"Aveia em Flocos",
+						  "quantity":3,
+						  "expirationDate":"2030-02-10",
+						  "barcode":"7891234567890",
+						  "category":"Cereais"
+						}
+						"""))
+			.andExpect(status().isCreated())
+			.andExpect(jsonPath("$.barcode").value("7891234567890"))
+			.andExpect(jsonPath("$.category").value("Cereais"));
+
+		createEntry("Aveia em Flocos", 1, "2030-03-10")
+			.andExpect(status().isCreated())
+			.andExpect(jsonPath("$.barcode").value("7891234567890"))
+			.andExpect(jsonPath("$.category").value("Cereais"));
+		assertThatSingleProductWasCreated();
+	}
+
+	@Test
+	void rejectsAConflictingCategoryForAnExistingProduct() throws Exception {
+		entryCreationStatus("Aveia em Flocos", null, "Cereais", "2030-01-10");
+
+		mockMvc.perform(post("/api/v1/stock-entries")
+				.with(operator())
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("""
+						{"productName":"Aveia em Flocos","quantity":1,
+						 "expirationDate":"2030-02-10","category":"Mercearia"}
+						"""))
+			.andExpect(status().isConflict())
+			.andExpect(jsonPath("$.detail").value("O produto informado já pertence a outra categoria."));
+
+		org.assertj.core.api.Assertions.assertThat(stockEntryRepository.count()).isEqualTo(1);
+		org.assertj.core.api.Assertions.assertThat(
+				productRepository.findFirstBySearchNameOrderById("aveia em flocos").orElseThrow().getCategory())
+			.isEqualTo("Cereais");
+	}
+
+	@Test
+	void rejectsInvalidOrDuplicateBarcodes() throws Exception {
+		mockMvc.perform(post("/api/v1/stock-entries")
+				.with(operator())
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("""
+						{"productName":"Produto inválido","quantity":1,
+						 "expirationDate":"2030-01-01","barcode":"ABC123"}
+						"""))
+			.andExpect(status().isBadRequest());
+
+		mockMvc.perform(post("/api/v1/stock-entries")
+				.with(operator())
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("""
+						{"productName":"Produto A","quantity":1,
+						 "expirationDate":"2030-01-01","barcode":"7891234567890"}
+						"""))
+			.andExpect(status().isCreated());
+
+		mockMvc.perform(post("/api/v1/stock-entries")
+				.with(operator())
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("""
+						{"productName":"Produto B","quantity":1,
+						 "expirationDate":"2030-02-01","barcode":"7891234567890"}
+						"""))
+			.andExpect(status().isConflict())
+			.andExpect(jsonPath("$.detail").value("O código de barras informado já pertence a outro produto."));
+
+		org.assertj.core.api.Assertions.assertThat(productRepository.count()).isEqualTo(1);
+		org.assertj.core.api.Assertions.assertThat(stockEntryRepository.count()).isEqualTo(1);
+	}
+
+	@Test
+	void atomicallyClaimsTheBarcodeForAnExistingProduct() throws Exception {
+		createEntry("Produto legado", 1, "2030-01-01")
+			.andExpect(status().isCreated());
+
+		CompletableFuture<Integer> first = CompletableFuture.supplyAsync(
+				() -> entryCreationStatus("Produto legado", "7891234567890", "2030-02-01"));
+		CompletableFuture<Integer> second = CompletableFuture.supplyAsync(
+				() -> entryCreationStatus("Produto legado", "7891234567891", "2030-03-01"));
+		List<Integer> statuses = java.util.stream.Stream.of(first.join(), second.join()).sorted().toList();
+
+		org.assertj.core.api.Assertions.assertThat(statuses).containsExactly(201, 409);
+		org.assertj.core.api.Assertions.assertThat(productRepository.count()).isEqualTo(1);
+		org.assertj.core.api.Assertions.assertThat(stockEntryRepository.count()).isEqualTo(2);
+		org.assertj.core.api.Assertions.assertThat(
+				productRepository.findFirstBySearchNameOrderById("produto legado").orElseThrow().getBarcode())
+			.isIn("7891234567890", "7891234567891");
+	}
+
+	@Test
+	void atomicallyClaimsTheCategoryForAnExistingProduct() throws Exception {
+		createEntry("Produto legado", 1, "2030-01-01")
+			.andExpect(status().isCreated());
+
+		CompletableFuture<Integer> first = CompletableFuture.supplyAsync(
+				() -> entryCreationStatus("Produto legado", null, "Cereais", "2030-02-01"));
+		CompletableFuture<Integer> second = CompletableFuture.supplyAsync(
+				() -> entryCreationStatus("Produto legado", null, "Mercearia", "2030-03-01"));
+		List<Integer> statuses = java.util.stream.Stream.of(first.join(), second.join()).sorted().toList();
+
+		org.assertj.core.api.Assertions.assertThat(statuses).containsExactly(201, 409);
+		org.assertj.core.api.Assertions.assertThat(productRepository.count()).isEqualTo(1);
+		org.assertj.core.api.Assertions.assertThat(stockEntryRepository.count()).isEqualTo(2);
+		org.assertj.core.api.Assertions.assertThat(
+				productRepository.findFirstBySearchNameOrderById("produto legado").orElseThrow().getCategory())
+			.isIn("Cereais", "Mercearia");
+	}
+
+	@Test
+	void rejectsConcurrentBarcodeClaimsFromDifferentProducts() {
+		CompletableFuture<Integer> first = CompletableFuture.supplyAsync(
+				() -> entryCreationStatus("Produto A", "7891234567890", null, "2030-01-01"));
+		CompletableFuture<Integer> second = CompletableFuture.supplyAsync(
+				() -> entryCreationStatus("Produto B", "7891234567890", null, "2030-02-01"));
+		List<Integer> statuses = java.util.stream.Stream.of(first.join(), second.join()).sorted().toList();
+
+		org.assertj.core.api.Assertions.assertThat(statuses).containsExactly(201, 409);
+		org.assertj.core.api.Assertions.assertThat(productRepository.count()).isEqualTo(1);
+		org.assertj.core.api.Assertions.assertThat(stockEntryRepository.count()).isEqualTo(1);
+		org.assertj.core.api.Assertions.assertThat(stockMovementRepository.count()).isEqualTo(1);
+	}
+
+	@Test
 	void requiresValidCredentialsForInventory() throws Exception {
 		mockMvc.perform(get("/api/v1/stock-entries"))
 			.andExpect(status().isUnauthorized());
@@ -539,6 +708,29 @@ class StockEntryControllerTests {
 					.content("""
 							{"quantity":%d,"reason":"SOLD"}
 							""".formatted(quantity)))
+				.andReturn()
+				.getResponse()
+				.getStatus();
+		}
+		catch (Exception exception) {
+			throw new CompletionException(exception);
+		}
+	}
+
+	private int entryCreationStatus(String productName, String barcode, String expirationDate) {
+		return entryCreationStatus(productName, barcode, null, expirationDate);
+	}
+
+	private int entryCreationStatus(String productName, String barcode, String category, String expirationDate) {
+		try {
+			String barcodeProperty = barcode == null ? "" : ",\"barcode\":\"%s\"".formatted(barcode);
+			String categoryProperty = category == null ? "" : ",\"category\":\"%s\"".formatted(category);
+			return mockMvc.perform(post("/api/v1/stock-entries")
+					.with(operator())
+					.contentType(MediaType.APPLICATION_JSON)
+					.content("""
+							{"productName":"%s","quantity":1,"expirationDate":"%s"%s%s}
+							""".formatted(productName, expirationDate, barcodeProperty, categoryProperty)))
 				.andReturn()
 				.getResponse()
 				.getStatus();

@@ -1,5 +1,6 @@
 package io.github.vitaa1.gestorvp.inventory;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
 
@@ -34,17 +35,30 @@ class StockEntry {
 	@Column(name = "expiration_date", nullable = false)
 	private LocalDate expirationDate;
 
+	@Column(name = "unit_cost", precision = 12, scale = 2)
+	private BigDecimal unitCost;
+
+	@Column(length = 120)
+	private String supplier;
+
+	@Column(name = "batch_number", length = 120)
+	private String batchNumber;
+
 	@Column(name = "created_at", nullable = false)
 	private Instant createdAt;
 
 	protected StockEntry() {
 	}
 
-	StockEntry(Product product, int quantity, LocalDate expirationDate, Instant createdAt) {
+	StockEntry(Product product, int quantity, LocalDate expirationDate, BigDecimal unitCost, String supplier,
+			String batchNumber, Instant createdAt) {
 		this.product = product;
 		this.initialQuantity = quantity;
 		this.availableQuantity = quantity;
 		this.expirationDate = expirationDate;
+		this.unitCost = unitCost;
+		this.supplier = supplier;
+		this.batchNumber = batchNumber;
 		this.createdAt = createdAt;
 	}
 
@@ -66,6 +80,18 @@ class StockEntry {
 
 	LocalDate getExpirationDate() {
 		return expirationDate;
+	}
+
+	BigDecimal getUnitCost() {
+		return unitCost;
+	}
+
+	String getSupplier() {
+		return supplier;
+	}
+
+	String getBatchNumber() {
+		return batchNumber;
 	}
 
 	Instant getCreatedAt() {

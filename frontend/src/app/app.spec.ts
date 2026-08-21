@@ -17,8 +17,13 @@ const entries: StockEntry[] = [
   {
     id: 1,
     productName: 'Leite Integral',
+    barcode: null,
+    category: null,
     quantity: 12,
     expirationDate: '2026-08-20',
+    unitCost: null,
+    supplier: null,
+    batchNumber: null,
     status: 'ATTENTION',
     statusLabel: 'Atenção',
     daysUntilExpiration: 6,
