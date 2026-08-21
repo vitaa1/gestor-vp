@@ -16,6 +16,7 @@ export class Login {
 
   readonly loggedIn = output<void>();
   readonly submitting = signal(false);
+  readonly passwordVisible = signal(false);
   readonly errorMessage = signal('');
   readonly form = this.formBuilder.group({
     username: ['', [Validators.required, Validators.maxLength(120)]],
@@ -30,6 +31,7 @@ export class Login {
     }
 
     const { username, password } = this.form.getRawValue();
+    this.passwordVisible.set(false);
     this.submitting.set(true);
     this.authService
       .login(username.trim(), password)
@@ -43,6 +45,10 @@ export class Login {
           this.errorMessage.set(this.loginErrorMessage(error.status));
         },
       });
+  }
+
+  togglePasswordVisibility(): void {
+    this.passwordVisible.update((visible) => !visible);
   }
 
   private loginErrorMessage(status: number): string {
