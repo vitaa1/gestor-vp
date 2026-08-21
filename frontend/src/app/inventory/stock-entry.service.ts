@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 import { AuthService } from '../auth/auth.service';
 import {
   CreateStockEntry,
+  ExpirationStatus,
   StockEntry,
   StockEntryDetailsModel,
   StockEntryPage,
@@ -30,6 +31,33 @@ export class StockEntryService {
         cursorId === undefined
           ? { size }
           : { size, cursorExpirationDate, cursorCreatedAt, cursorId },
+    });
+  }
+
+  search(
+    query: string,
+    status: ExpirationStatus | '',
+    size = 50,
+    cursorExpirationDate?: string,
+    cursorCreatedAt?: string,
+    cursorId?: number,
+  ): Observable<StockEntryPage> {
+    const params: Record<string, string | number> = { size, query: query.trim() };
+    if (status) {
+      params['status'] = status;
+    }
+    if (
+      cursorExpirationDate !== undefined &&
+      cursorCreatedAt !== undefined &&
+      cursorId !== undefined
+    ) {
+      params['cursorExpirationDate'] = cursorExpirationDate;
+      params['cursorCreatedAt'] = cursorCreatedAt;
+      params['cursorId'] = cursorId;
+    }
+    return this.http.get<StockEntryPage>(this.resourceUrl, {
+      headers: this.authService.headers(),
+      params,
     });
   }
 

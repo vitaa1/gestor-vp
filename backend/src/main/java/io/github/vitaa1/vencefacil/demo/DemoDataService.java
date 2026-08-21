@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import io.github.vitaa1.vencefacil.inventory.BusinessDateProvider;
+import io.github.vitaa1.vencefacil.inventory.ProductNameNormalizer;
 
 @Service
 class DemoDataService {
@@ -85,19 +86,19 @@ class DemoDataService {
 		jdbcTemplate.update("delete from products");
 
 		LocalDate today = businessDateProvider.defaultDate();
-		seedEntry("Iogurte Natural", "iogurte natural", 6, today.minusDays(2), now);
-		seedEntry("Leite Integral", "leite integral", 12, today.plusDays(4), now);
-		seedEntry("Pão de Forma", "pão de forma", 8, today.plusDays(18), now);
-		seedEntry("Arroz Integral", "arroz integral", 4, today.plusDays(60), now);
+		seedEntry("Iogurte Natural", 6, today.minusDays(2), now);
+		seedEntry("Leite Integral", 12, today.plusDays(4), now);
+		seedEntry("Pão de Forma", 8, today.plusDays(18), now);
+		seedEntry("Arroz Integral", 4, today.plusDays(60), now);
 	}
 
-	private void seedEntry(String name, String normalizedName, int quantity, LocalDate expirationDate, Instant now) {
+	private void seedEntry(String name, int quantity, LocalDate expirationDate, Instant now) {
 		OffsetDateTime createdAt = OffsetDateTime.ofInstant(now, ZoneOffset.UTC);
 		Long productId = jdbcTemplate.queryForObject("""
 				insert into products (name, normalized_name, created_at)
 				values (?, ?, ?)
 				returning id
-				""", Long.class, name, normalizedName, createdAt);
+				""", Long.class, name, ProductNameNormalizer.legacyNormalizedName(name), createdAt);
 		Long entryId = jdbcTemplate.queryForObject("""
 				insert into stock_entries
 				    (product_id, initial_quantity, available_quantity, expiration_date, created_at)

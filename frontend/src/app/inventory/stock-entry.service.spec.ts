@@ -50,4 +50,28 @@ describe('StockEntryService', () => {
       nextCursorId: null,
     });
   });
+
+  it('searches products with name, status and a stable continuation cursor', () => {
+    service.search('  pão  ', 'WATCH', 20, '2030-01-02', '2026-08-22T00:30:00Z', 42).subscribe();
+
+    const request = http.expectOne(
+      (candidate) =>
+        candidate.url === '/api/v1/stock-entries' &&
+        candidate.params.get('query') === 'pão' &&
+        candidate.params.get('status') === 'WATCH' &&
+        candidate.params.get('size') === '20' &&
+        candidate.params.get('cursorExpirationDate') === '2030-01-02' &&
+        candidate.params.get('cursorCreatedAt') === '2026-08-22T00:30:00Z' &&
+        candidate.params.get('cursorId') === '42',
+    );
+    expect(request.request.headers.get('Authorization')).toBe('Basic test-credentials');
+    request.flush({
+      content: [],
+      size: 20,
+      hasNext: false,
+      nextCursorExpirationDate: null,
+      nextCursorCreatedAt: null,
+      nextCursorId: null,
+    });
+  });
 });

@@ -23,6 +23,9 @@ class Product {
 	@Column(name = "normalized_name", nullable = false, length = 120, unique = true)
 	private String normalizedName;
 
+	@Column(name = "search_name", nullable = false, length = 120)
+	private String searchName;
+
 	@Column(name = "created_at", nullable = false)
 	private Instant createdAt;
 

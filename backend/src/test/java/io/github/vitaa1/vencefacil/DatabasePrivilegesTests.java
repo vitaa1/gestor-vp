@@ -6,6 +6,8 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 
 import org.junit.jupiter.api.Test;
+import org.flywaydb.core.Flyway;
+import org.flywaydb.core.api.MigrationVersion;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
@@ -46,6 +48,77 @@ class DatabasePrivilegesTests {
 			statement.setString(1, "Produto de teste");
 			statement.setString(2, "produto de teste");
 			assertThat(statement.executeUpdate()).isEqualTo(1);
+		}
+	}
+
+	@Test
+	void productSearchMigrationSupportsLegacyWritesAfterTheUpgrade() throws SQLException {
+		String schema = "product_name_migration_test";
+		try (var connection = DriverManager.getConnection(
+				postgresContainer.getJdbcUrl(), postgresContainer.getUsername(), postgresContainer.getPassword());
+				var statement = connection.createStatement()) {
+			statement.execute("create schema " + schema);
+		}
+
+		try {
+			Flyway.configure()
+				.dataSource(postgresContainer.getJdbcUrl(), postgresContainer.getUsername(), postgresContainer.getPassword())
+				.schemas(schema)
+				.defaultSchema(schema)
+				.target(MigrationVersion.fromVersion("4"))
+				.load()
+				.migrate();
+
+			try (var connection = DriverManager.getConnection(
+					postgresContainer.getJdbcUrl(), postgresContainer.getUsername(), postgresContainer.getPassword());
+					var statement = connection.createStatement()) {
+				statement.execute("set search_path to " + schema);
+				statement.executeUpdate("""
+						insert into products (id, name, normalized_name, created_at)
+						values (1, 'Pão de Forma', 'pão de forma', current_timestamp)
+						""");
+				statement.executeUpdate("""
+						insert into stock_entries
+						    (product_id, initial_quantity, available_quantity, expiration_date, created_at)
+						values (1, 1, 1, current_date + 1, current_timestamp)
+						""");
+			}
+
+			Flyway.configure()
+				.dataSource(postgresContainer.getJdbcUrl(), postgresContainer.getUsername(), postgresContainer.getPassword())
+				.schemas(schema)
+				.defaultSchema(schema)
+				.load()
+				.migrate();
+
+			try (var connection = DriverManager.getConnection(
+					postgresContainer.getJdbcUrl(), postgresContainer.getUsername(), postgresContainer.getPassword());
+					var statement = connection.createStatement()) {
+				statement.execute("set search_path to " + schema);
+				statement.executeUpdate("""
+						insert into products (id, name, normalized_name, created_at)
+						values (2, U&'Cafe\\0301 com Leite', U&'cafe\\0301 com leite', current_timestamp)
+						""");
+				try (var result = statement.executeQuery("""
+						select (select count(*) from products),
+						       (select count(*) from stock_entries),
+						       (select string_agg(search_name, ',' order by id) from products),
+						       (select normalized_name from products where id = 1)
+						""")) {
+					assertThat(result.next()).isTrue();
+					assertThat(result.getLong(1)).isEqualTo(2);
+					assertThat(result.getLong(2)).isEqualTo(1);
+					assertThat(result.getString(3)).isEqualTo("pao de forma,cafe com leite");
+					assertThat(result.getString(4)).isEqualTo("pão de forma");
+				}
+			}
+		}
+		finally {
+			try (var connection = DriverManager.getConnection(
+					postgresContainer.getJdbcUrl(), postgresContainer.getUsername(), postgresContainer.getPassword());
+					var statement = connection.createStatement()) {
+				statement.execute("drop schema " + schema + " cascade");
+			}
 		}
 	}
 

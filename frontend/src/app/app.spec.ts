@@ -59,6 +59,10 @@ class StockEntryServiceStub {
     return of(stockPage(entries));
   }
 
+  search() {
+    return of(stockPage(entries));
+  }
+
   create() {
     return of(entries[0]);
   }
@@ -142,6 +146,111 @@ describe('App', () => {
     expect((fixture.nativeElement as HTMLElement).textContent).toContain('Histórico');
     expect((fixture.nativeElement as HTMLElement).textContent).toContain('Leite Integral');
     expect((fixture.nativeElement as HTMLElement).textContent).toContain('Vendi');
+  });
+
+  it('should search products by name and expiration status from the primary navigation', () => {
+    const service = TestBed.inject(StockEntryService);
+    const search = vi.spyOn(service, 'search');
+    const fixture = TestBed.createComponent(App);
+    fixture.detectChanges();
+
+    const productsButton = fixture.nativeElement.querySelector(
+      '[data-view="products"]',
+    ) as HTMLButtonElement;
+    productsButton.click();
+    fixture.detectChanges();
+
+    const queryInput = fixture.nativeElement.querySelector(
+      '.product-search input',
+    ) as HTMLInputElement;
+    queryInput.value = ' pão ';
+    queryInput.dispatchEvent(new Event('input'));
+    const statusSelect = fixture.nativeElement.querySelector(
+      '.product-search select',
+    ) as HTMLSelectElement;
+    statusSelect.value = 'WATCH';
+    statusSelect.dispatchEvent(new Event('change'));
+    fixture.detectChanges();
+
+    expect(fixture.componentInstance.activeView()).toBe('products');
+    expect(search).toHaveBeenLastCalledWith(' pão ', 'WATCH');
+    expect((fixture.nativeElement as HTMLElement).textContent).toContain('Leite Integral');
+  });
+
+  it('should show a friendly message when a product search has no results', () => {
+    const service = TestBed.inject(StockEntryService);
+    vi.spyOn(service, 'search').mockReturnValueOnce(of(stockPage([])));
+    const fixture = TestBed.createComponent(App);
+
+    fixture.componentInstance.showProducts();
+    fixture.detectChanges();
+
+    expect((fixture.nativeElement as HTMLElement).textContent).toContain(
+      'Nenhum produto encontrado.',
+    );
+  });
+
+  it('should keep pagination tied to the product criteria that produced its cursor', () => {
+    const service = TestBed.inject(StockEntryService);
+    const search = vi
+      .spyOn(service, 'search')
+      .mockReturnValueOnce(of(stockPage(entries, true)))
+      .mockReturnValueOnce(of(stockPage([])));
+    const fixture = TestBed.createComponent(App);
+    const component = fixture.componentInstance;
+
+    component.showProducts();
+    component.updateProductQuery({ target: { value: 'pão' } } as unknown as Event);
+    component.loadMoreProducts();
+
+    expect(search).toHaveBeenNthCalledWith(
+      2,
+      '',
+      '',
+      50,
+      entries[0].expirationDate,
+      entries[0].createdAt,
+      entries[0].id,
+    );
+  });
+
+  it('should invalidate product pagination when a new search fails', () => {
+    const service = TestBed.inject(StockEntryService);
+    const search = vi
+      .spyOn(service, 'search')
+      .mockReturnValueOnce(of(stockPage(entries, true)))
+      .mockReturnValueOnce(throwError(() => new Error('network error')));
+    const fixture = TestBed.createComponent(App);
+    const component = fixture.componentInstance;
+
+    component.showProducts();
+    component.productQuery.set('arroz');
+    component.searchProducts();
+    component.loadMoreProducts();
+
+    expect(search).toHaveBeenCalledTimes(2);
+    expect(component.productEntries()).toEqual(entries);
+    expect(component.productHasMore()).toBe(false);
+    expect(component.productError()).not.toBe('');
+  });
+
+  it('should clear a product pagination error after a successful retry', () => {
+    const service = TestBed.inject(StockEntryService);
+    const nextEntry = { ...entries[0], id: 2, productName: 'Arroz Integral' };
+    vi.spyOn(service, 'search')
+      .mockReturnValueOnce(of(stockPage(entries, true)))
+      .mockReturnValueOnce(throwError(() => new Error('network error')))
+      .mockReturnValueOnce(of(stockPage([nextEntry])));
+    const fixture = TestBed.createComponent(App);
+    const component = fixture.componentInstance;
+
+    component.showProducts();
+    component.loadMoreProducts();
+    expect(component.productError()).not.toBe('');
+    component.loadMoreProducts();
+
+    expect(component.productError()).toBe('');
+    expect(component.productEntries()).toEqual([...entries, nextEntry]);
   });
 
   it('should append another history page without replacing recent movements', () => {

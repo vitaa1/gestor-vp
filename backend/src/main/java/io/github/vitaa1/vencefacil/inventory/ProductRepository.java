@@ -12,6 +12,8 @@ interface ProductRepository extends JpaRepository<Product, Long> {
 
 	Optional<Product> findByNormalizedName(String normalizedName);
 
+	Optional<Product> findFirstBySearchNameOrderById(String searchName);
+
 	@Modifying(flushAutomatically = true)
 	@Query(value = """
 			insert into products (name, normalized_name, created_at)

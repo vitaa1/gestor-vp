@@ -28,7 +28,15 @@ test('completes the inventory and history flow through the published application
   await page.getByRole('button', { name: 'Adicionar produto' }).click();
 
   await expect(page.getByText('Produto adicionado!')).toBeVisible();
-  const entryCard = page.locator('.entry-card').filter({ hasText: productName });
+  let entryCard = page.locator('.entry-card').filter({ hasText: productName });
+  await expect(entryCard).toBeVisible();
+
+  await page.getByRole('button', { name: 'Produtos' }).click();
+  const productSearch = page.getByRole('form', { name: 'Buscar produtos' });
+  await productSearch.getByLabel('Nome do produto').fill('produto e2e');
+  await productSearch.getByLabel('Situação').selectOption('OK');
+  await productSearch.getByRole('button', { name: 'Buscar' }).click();
+  entryCard = page.locator('.entry-card').filter({ hasText: productName });
   await expect(entryCard).toBeVisible();
 
   await entryCard.getByRole('button', { name: 'Ver detalhes' }).click();
@@ -36,7 +44,8 @@ test('completes the inventory and history flow through the published application
   await page.locator('#withdrawal-reason').selectOption('USED');
   await page.getByRole('button', { name: 'Revisar retirada' }).click();
   await page.getByRole('button', { name: 'Confirmar retirada' }).click();
-  await expect(page.getByText(`${productName} saiu do estoque ativo.`)).toBeVisible();
+  await expect(entryCard).toHaveCount(0);
+  await expect(page.getByText('Nenhum produto encontrado.')).toBeVisible();
 
   await page.getByRole('button', { name: 'Histórico' }).click();
   await expect(page.getByRole('heading', { name: 'Histórico' })).toBeVisible();

@@ -12,6 +12,10 @@ export class StockEntryList {
   readonly errorMessage = input('');
   readonly hasMore = input(false);
   readonly loadingMore = input(false);
+  readonly headingEyebrow = input('Por ordem de validade');
+  readonly headingTitle = input('Produtos no estoque');
+  readonly emptyTitle = input('Seu estoque ainda está vazio.');
+  readonly emptyDescription = input('Adicione o primeiro produto usando o formulário acima.');
   readonly retryRequested = output<void>();
   readonly loadMoreRequested = output<void>();
   readonly detailsRequested = output<number>();

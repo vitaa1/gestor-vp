@@ -109,6 +109,14 @@ class StockEntryControllerTests {
 
 		mockMvc.perform(get("/api/v1/stock-entries?cursorId=10").with(operator()))
 			.andExpect(status().isBadRequest());
+
+		mockMvc.perform(get("/api/v1/stock-entries")
+				.param("query", "a".repeat(121))
+				.with(operator()))
+			.andExpect(status().isBadRequest());
+
+		mockMvc.perform(get("/api/v1/stock-entries?status=UNKNOWN").with(operator()))
+			.andExpect(status().isBadRequest());
 	}
 
 	@Test
@@ -203,6 +211,108 @@ class StockEntryControllerTests {
 
 		assertThatSingleProductWasCreated();
 		org.assertj.core.api.Assertions.assertThat(stockMovementRepository.count()).isEqualTo(2);
+	}
+
+	@Test
+	void reusesAndFindsProductsIgnoringCanonicalAccentsCaseAndExtraWhitespace() throws Exception {
+		createEntry("Pão de Forma", 5, "2028-01-01").andExpect(status().isCreated());
+		createEntry("  PAO   DE forma ", 3, "2028-02-01").andExpect(status().isCreated());
+		createEntry("Cafe\u0301 com Leite", 2, "2028-02-15").andExpect(status().isCreated());
+		createEntry("Arroz Integral", 4, "2028-03-01").andExpect(status().isCreated());
+		org.assertj.core.api.Assertions.assertThat(productRepository.count()).isEqualTo(3);
+
+		mockMvc.perform(get("/api/v1/stock-entries")
+				.param("query", "  PAO   DE  ")
+				.with(operator()))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.content", hasSize(2)))
+			.andExpect(jsonPath("$.content[0].productName").value("Pão de Forma"))
+			.andExpect(jsonPath("$.content[1].productName").value("Pão de Forma"));
+
+		mockMvc.perform(get("/api/v1/stock-entries")
+				.param("query", "cafe com leite")
+				.with(operator()))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.content", hasSize(1)))
+			.andExpect(jsonPath("$.content[0].productName").value("Café com Leite"));
+	}
+
+	@Test
+	void combinesProductNameSearchWithExpirationStatusFilter() throws Exception {
+		createEntry("Leite vencido", 1, "2026-08-21").andExpect(status().isCreated());
+		createEntry("Leite atenção", 1, "2026-08-29").andExpect(status().isCreated());
+		createEntry("Leite observar", 1, "2026-08-30").andExpect(status().isCreated());
+		createEntry("Leite seguro", 1, "2026-09-22").andExpect(status().isCreated());
+		createEntry("Arroz vencido", 1, "2026-08-20").andExpect(status().isCreated());
+
+		mockMvc.perform(get("/api/v1/stock-entries")
+				.param("query", "leite")
+				.param("status", "EXPIRED")
+				.with(operator()))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.content", hasSize(1)))
+			.andExpect(jsonPath("$.content[0].productName").value("Leite vencido"));
+
+		mockMvc.perform(get("/api/v1/stock-entries")
+				.param("query", "leite")
+				.param("status", "ATTENTION")
+				.with(operator()))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.content", hasSize(1)))
+			.andExpect(jsonPath("$.content[0].productName").value("Leite atenção"));
+
+		mockMvc.perform(get("/api/v1/stock-entries")
+				.param("query", "leite")
+				.param("status", "WATCH")
+				.with(operator()))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.content", hasSize(1)))
+			.andExpect(jsonPath("$.content[0].productName").value("Leite observar"));
+
+		mockMvc.perform(get("/api/v1/stock-entries")
+				.param("query", "leite")
+				.param("status", "OK")
+				.with(operator()))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.content", hasSize(1)))
+			.andExpect(jsonPath("$.content[0].productName").value("Leite seguro"));
+	}
+
+	@Test
+	void continuesFilteredProductSearchWithoutDuplicatesOrUnrelatedEntries() throws Exception {
+		long firstEntryId = createdEntryId("Leite A", 1, "2030-01-01");
+		long secondEntryId = createdEntryId("Leite B", 1, "2030-01-02");
+		createdEntryId("Arroz", 1, "2030-01-03");
+
+		MvcResult firstSlice = mockMvc.perform(get("/api/v1/stock-entries")
+				.param("size", "1")
+				.param("query", "leite")
+				.param("status", "OK")
+				.with(operator()))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.content", hasSize(1)))
+			.andExpect(jsonPath("$.content[0].id").value(firstEntryId))
+			.andExpect(jsonPath("$.hasNext").value(true))
+			.andReturn();
+		String cursorExpirationDate = com.jayway.jsonpath.JsonPath.read(
+				firstSlice.getResponse().getContentAsString(), "$.nextCursorExpirationDate");
+		String cursorCreatedAt = com.jayway.jsonpath.JsonPath.read(
+				firstSlice.getResponse().getContentAsString(), "$.nextCursorCreatedAt");
+		Number cursorId = com.jayway.jsonpath.JsonPath.read(
+				firstSlice.getResponse().getContentAsString(), "$.nextCursorId");
+
+		mockMvc.perform(get("/api/v1/stock-entries")
+				.param("size", "1")
+				.param("query", "leite")
+				.param("status", "OK")
+				.param("cursorExpirationDate", cursorExpirationDate)
+				.param("cursorCreatedAt", cursorCreatedAt)
+				.param("cursorId", cursorId.toString())
+				.with(operator()))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.content", hasSize(1)))
+			.andExpect(jsonPath("$.content[0].id").value(secondEntryId))
+			.andExpect(jsonPath("$.hasNext").value(false));
 	}
 
 	@Test

@@ -18,14 +18,24 @@ interface StockEntryRepository extends JpaRepository<StockEntry, Long> {
 	@Query("""
 			select entry from StockEntry entry
 			where entry.availableQuantity > 0
+			  and locate(:normalizedQuery, entry.product.searchName) > 0
+			  and entry.expirationDate >= :minimumExpirationDate
+			  and entry.expirationDate <= :maximumExpirationDate
 			order by entry.expirationDate, entry.createdAt, entry.id
 			""")
-	List<StockEntry> findFirstActiveSlice(Pageable pageable);
+	List<StockEntry> findFirstActiveSlice(
+			@Param("normalizedQuery") String normalizedQuery,
+			@Param("minimumExpirationDate") LocalDate minimumExpirationDate,
+			@Param("maximumExpirationDate") LocalDate maximumExpirationDate,
+			Pageable pageable);
 
 	@EntityGraph(attributePaths = "product")
 	@Query("""
 			select entry from StockEntry entry
 			where entry.availableQuantity > 0
+			  and locate(:normalizedQuery, entry.product.searchName) > 0
+			  and entry.expirationDate >= :minimumExpirationDate
+			  and entry.expirationDate <= :maximumExpirationDate
 			  and (entry.expirationDate > :cursorExpirationDate
 			       or (entry.expirationDate = :cursorExpirationDate and entry.createdAt > :cursorCreatedAt)
 			       or (entry.expirationDate = :cursorExpirationDate
@@ -33,6 +43,9 @@ interface StockEntryRepository extends JpaRepository<StockEntry, Long> {
 			order by entry.expirationDate, entry.createdAt, entry.id
 			""")
 	List<StockEntry> findActiveSliceAfter(
+			@Param("normalizedQuery") String normalizedQuery,
+			@Param("minimumExpirationDate") LocalDate minimumExpirationDate,
+			@Param("maximumExpirationDate") LocalDate maximumExpirationDate,
 			@Param("cursorExpirationDate") LocalDate cursorExpirationDate,
 			@Param("cursorCreatedAt") Instant cursorCreatedAt,
 			@Param("cursorId") long cursorId,

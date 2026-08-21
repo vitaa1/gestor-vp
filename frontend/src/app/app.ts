@@ -12,6 +12,7 @@ import {
   StockEntry,
   StockEntryDetailsModel,
   StockEntryPage,
+  ExpirationStatus,
   WithdrawStock,
 } from './inventory/stock-entry.model';
 import { StockEntryService } from './inventory/stock-entry.service';
@@ -31,6 +32,12 @@ export class App {
   private entryCursorExpirationDate: string | null = null;
   private entryCursorCreatedAt: string | null = null;
   private entryCursorId: number | null = null;
+  private productLoadVersion = 0;
+  private productCursorExpirationDate: string | null = null;
+  private productCursorCreatedAt: string | null = null;
+  private productCursorId: number | null = null;
+  private appliedProductQuery = '';
+  private appliedProductStatus: ExpirationStatus | '' = '';
   private detailsLoadVersion = 0;
   private movementLoadVersion = 0;
   private movementCursorCreatedAt: string | null = null;
@@ -38,7 +45,7 @@ export class App {
   private readonly detailsPanel = viewChild(StockEntryDetails);
 
   readonly entries = signal<StockEntry[]>([]);
-  readonly activeView = signal<'stock' | 'history'>('stock');
+  readonly activeView = signal<'stock' | 'products' | 'history'>('stock');
   readonly loading = signal(false);
   readonly loadingMore = signal(false);
   readonly hasMore = signal(false);
@@ -50,6 +57,13 @@ export class App {
   readonly withdrawalPending = signal(false);
   readonly withdrawalError = signal('');
   readonly actionMessage = signal('');
+  readonly productQuery = signal('');
+  readonly productStatus = signal<ExpirationStatus | ''>('');
+  readonly productEntries = signal<StockEntry[]>([]);
+  readonly productLoading = signal(false);
+  readonly productLoadingMore = signal(false);
+  readonly productHasMore = signal(false);
+  readonly productError = signal('');
   readonly movements = signal<StockMovement[]>([]);
   readonly movementLoading = signal(false);
   readonly movementLoadingMore = signal(false);
@@ -60,9 +74,117 @@ export class App {
     this.activeView.set('stock');
   }
 
+  showProducts(): void {
+    this.activeView.set('products');
+    this.searchProducts();
+  }
+
   showHistory(): void {
     this.activeView.set('history');
     this.loadMovements();
+  }
+
+  updateProductQuery(event: Event): void {
+    this.productQuery.set((event.target as HTMLInputElement).value);
+  }
+
+  updateProductStatus(event: Event): void {
+    this.productStatus.set((event.target as HTMLSelectElement).value as ExpirationStatus | '');
+    this.searchProducts();
+  }
+
+  submitProductSearch(event: Event): void {
+    event.preventDefault();
+    this.searchProducts();
+  }
+
+  searchProducts(): void {
+    const query = this.productQuery();
+    const status = this.productStatus();
+    const requestVersion = ++this.productLoadVersion;
+    this.productLoading.set(true);
+    this.productLoadingMore.set(false);
+    this.productHasMore.set(false);
+    this.clearProductCursor();
+    this.productError.set('');
+    this.stockEntryService.search(query, status).subscribe({
+      next: (result) => {
+        if (requestVersion !== this.productLoadVersion) {
+          return;
+        }
+        this.productEntries.set(result.content);
+        this.appliedProductQuery = query;
+        this.appliedProductStatus = status;
+        this.setProductCursor(result);
+        this.productHasMore.set(result.hasNext);
+        this.productLoading.set(false);
+      },
+      error: (error: HttpErrorResponse) => {
+        if (requestVersion !== this.productLoadVersion) {
+          return;
+        }
+        if (error.status === 401) {
+          this.logout();
+          return;
+        }
+        this.productError.set('Não foi possível buscar os produtos.');
+        this.productLoading.set(false);
+      },
+    });
+  }
+
+  loadMoreProducts(): void {
+    const cursorExpirationDate = this.productCursorExpirationDate;
+    const cursorCreatedAt = this.productCursorCreatedAt;
+    const cursorId = this.productCursorId;
+    if (
+      this.productLoadingMore() ||
+      !this.productHasMore() ||
+      cursorExpirationDate === null ||
+      cursorCreatedAt === null ||
+      cursorId === null
+    ) {
+      return;
+    }
+
+    const requestVersion = ++this.productLoadVersion;
+    this.productLoadingMore.set(true);
+    this.productError.set('');
+    this.stockEntryService
+      .search(
+        this.appliedProductQuery,
+        this.appliedProductStatus,
+        50,
+        cursorExpirationDate,
+        cursorCreatedAt,
+        cursorId,
+      )
+      .subscribe({
+        next: (result) => {
+          if (requestVersion !== this.productLoadVersion) {
+            return;
+          }
+          const knownIds = new Set(this.productEntries().map((entry) => entry.id));
+          this.productEntries.update((entries) => [
+            ...entries,
+            ...result.content.filter((entry) => !knownIds.has(entry.id)),
+          ]);
+          this.setProductCursor(result);
+          this.productHasMore.set(result.hasNext);
+          this.productLoadingMore.set(false);
+        },
+        error: (error: HttpErrorResponse) => {
+          if (requestVersion !== this.productLoadVersion) {
+            return;
+          }
+          if (error.status === 401) {
+            this.logout();
+            return;
+          }
+          this.productError.set('Não foi possível carregar mais produtos.');
+          this.productLoadingMore.set(false);
+        },
+      });
   }
 
   loadMovements(): void {
@@ -279,6 +401,15 @@ export class App {
                   : candidate,
               ),
         );
+        this.productEntries.update((entries) =>
+          entryWasClosed
+            ? entries.filter((candidate) => candidate.id !== updatedEntry.id)
+            : entries.map((candidate) =>
+                candidate.id === updatedEntry.id
+                  ? { ...candidate, quantity: updatedEntry.availableQuantity }
+                  : candidate,
+              ),
+        );
         this.actionMessage.set(
           entryWasClosed
             ? `${updatedEntry.productName} saiu do estoque ativo.`
@@ -298,6 +429,9 @@ export class App {
         }
         if (entryWasClosed) {
           this.loadEntries(this.entries());
+          if (this.activeView() === 'products') {
+            this.searchProducts();
+          }
         }
       },
       error: (error: HttpErrorResponse) => {
@@ -336,6 +470,7 @@ export class App {
     this.entryCursorCreatedAt = null;
     this.entryCursorId = null;
     this.activeView.set('stock');
+    this.resetProducts();
     this.resetMovements();
     this.closeDetails();
     this.actionMessage.set('');
@@ -352,10 +487,38 @@ export class App {
     this.movementCursorId = null;
   }
 
+  private resetProducts(): void {
+    this.productLoadVersion += 1;
+    this.productEntries.set([]);
+    this.productLoading.set(false);
+    this.productLoadingMore.set(false);
+    this.productHasMore.set(false);
+    this.productError.set('');
+    this.productQuery.set('');
+    this.productStatus.set('');
+    this.productCursorExpirationDate = null;
+    this.productCursorCreatedAt = null;
+    this.productCursorId = null;
+    this.appliedProductQuery = '';
+    this.appliedProductStatus = '';
+  }
+
   private setEntryCursor(result: StockEntryPage): void {
     this.entryCursorExpirationDate = result.nextCursorExpirationDate;
     this.entryCursorCreatedAt = result.nextCursorCreatedAt;
     this.entryCursorId = result.nextCursorId;
+  }
+
+  private setProductCursor(result: StockEntryPage): void {
+    this.productCursorExpirationDate = result.nextCursorExpirationDate;
+    this.productCursorCreatedAt = result.nextCursorCreatedAt;
+    this.productCursorId = result.nextCursorId;
+  }
+
+  private clearProductCursor(): void {
+    this.productCursorExpirationDate = null;
+    this.productCursorCreatedAt = null;
+    this.productCursorId = null;
   }
 
   private sortEntries(entriesToSort: StockEntry[]): StockEntry[] {
