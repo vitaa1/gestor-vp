@@ -3,6 +3,8 @@ import { TestBed } from '@angular/core/testing';
 import { of, Subject, throwError } from 'rxjs';
 import { App } from './app';
 import { AuthService } from './auth/auth.service';
+import { StockMovement, StockMovementPage } from './history/stock-movement.model';
+import { StockMovementService } from './history/stock-movement.service';
 import {
   StockEntry,
   StockEntryDetailsModel,
@@ -21,6 +23,22 @@ const entries: StockEntry[] = [
     statusLabel: 'Atenção',
     daysUntilExpiration: 6,
     createdAt: '2026-08-14T12:00:00Z',
+  },
+];
+
+const movements: StockMovement[] = [
+  {
+    id: 2,
+    stockEntryId: 1,
+    productName: 'Leite Integral',
+    expirationDate: '2026-08-20',
+    type: 'WITHDRAWAL',
+    typeLabel: 'Retirada',
+    quantity: 5,
+    reason: 'SOLD',
+    reasonLabel: 'Vendi',
+    createdAt: '2026-08-15T18:30:00Z',
+    entryClosed: false,
   },
 ];
 
@@ -50,6 +68,18 @@ class StockEntryServiceStub {
   }
 }
 
+class StockMovementServiceStub {
+  list() {
+    return of<StockMovementPage>({
+      content: movements,
+      size: 20,
+      hasNext: false,
+      nextCursorCreatedAt: null,
+      nextCursorId: null,
+    });
+  }
+}
+
 class AuthServiceStub {
   readonly authenticated = signal(true);
 
@@ -64,6 +94,7 @@ describe('App', () => {
       imports: [App],
       providers: [
         { provide: StockEntryService, useClass: StockEntryServiceStub },
+        { provide: StockMovementService, useClass: StockMovementServiceStub },
         { provide: AuthService, useClass: AuthServiceStub },
       ],
     }).compileComponents();
@@ -83,6 +114,65 @@ describe('App', () => {
     expect(compiled.querySelector('h1')?.textContent).toContain('O que vence primeiro');
     expect(compiled.textContent).toContain('Leite Integral');
     expect(compiled.textContent).toContain('Atenção');
+  });
+
+  it('should open the history from the primary navigation and load recent movements', () => {
+    const fixture = TestBed.createComponent(App);
+    fixture.detectChanges();
+    const historyButton = (fixture.nativeElement as HTMLElement).querySelector(
+      '[data-view="history"]',
+    ) as HTMLButtonElement;
+
+    historyButton.click();
+    fixture.detectChanges();
+
+    expect(fixture.componentInstance.activeView()).toBe('history');
+    expect((fixture.nativeElement as HTMLElement).textContent).toContain('Histórico');
+    expect((fixture.nativeElement as HTMLElement).textContent).toContain('Leite Integral');
+    expect((fixture.nativeElement as HTMLElement).textContent).toContain('Vendi');
+  });
+
+  it('should append another history page without replacing recent movements', () => {
+    const service = TestBed.inject(StockMovementService);
+    const olderMovement: StockMovement = {
+      ...movements[0],
+      id: 1,
+      type: 'ENTRY',
+      typeLabel: 'Entrada',
+      quantity: 12,
+      reason: null,
+      reasonLabel: null,
+      createdAt: '2026-08-14T12:00:00Z',
+    };
+    vi.spyOn(service, 'list')
+      .mockReturnValueOnce(
+        of({
+          content: movements,
+          size: 1,
+          hasNext: true,
+          nextCursorCreatedAt: movements[0].createdAt,
+          nextCursorId: movements[0].id,
+        }),
+      )
+      .mockReturnValueOnce(
+        of({
+          content: [olderMovement],
+          size: 1,
+          hasNext: false,
+          nextCursorCreatedAt: null,
+          nextCursorId: null,
+        }),
+      );
+    const fixture = TestBed.createComponent(App);
+    const component = fixture.componentInstance;
+
+    component.showHistory();
+    component.loadMoreMovements();
+
+    expect(component.movements().map((movement) => movement.id)).toEqual([2, 1]);
+    expect(component.movementHasMore()).toBe(false);
+    expect(component.movementLoadingMore()).toBe(false);
+    expect(service.list).toHaveBeenNthCalledWith(2, 20, movements[0].createdAt, movements[0].id);
   });
 
   it('should disable creation while the initial inventory is loading', () => {

@@ -57,6 +57,14 @@ class StockMovement {
 		this.createdAt = createdAt;
 	}
 
+	Long getId() {
+		return id;
+	}
+
+	StockEntry getStockEntry() {
+		return stockEntry;
+	}
+
 	MovementType getMovementType() {
 		return movementType;
 	}
@@ -67,6 +75,10 @@ class StockMovement {
 
 	String getReason() {
 		return reason;
+	}
+
+	Instant getCreatedAt() {
+		return createdAt;
 	}
 
 }

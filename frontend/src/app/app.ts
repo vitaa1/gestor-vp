@@ -2,6 +2,9 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Component, inject, signal, viewChild } from '@angular/core';
 import { AuthService } from './auth/auth.service';
 import { Login } from './auth/login';
+import { StockMovement } from './history/stock-movement.model';
+import { StockMovementList } from './history/stock-movement-list';
+import { StockMovementService } from './history/stock-movement.service';
 import { StockEntryDetails } from './inventory/stock-entry-details';
 import { StockEntryForm } from './inventory/stock-entry-form';
 import { StockEntryList } from './inventory/stock-entry-list';
@@ -10,20 +13,25 @@ import { StockEntryService } from './inventory/stock-entry.service';
 
 @Component({
   selector: 'app-root',
-  imports: [Login, StockEntryForm, StockEntryList, StockEntryDetails],
+  imports: [Login, StockEntryForm, StockEntryList, StockEntryDetails, StockMovementList],
   templateUrl: './app.html',
   styleUrl: './app.scss',
 })
 export class App {
   private readonly stockEntryService = inject(StockEntryService);
+  private readonly stockMovementService = inject(StockMovementService);
   readonly authService = inject(AuthService);
   private loadVersion = 0;
   private currentPage = -1;
   private totalElements = 0;
   private detailsLoadVersion = 0;
+  private movementLoadVersion = 0;
+  private movementCursorCreatedAt: string | null = null;
+  private movementCursorId: number | null = null;
   private readonly detailsPanel = viewChild(StockEntryDetails);
 
   readonly entries = signal<StockEntry[]>([]);
+  readonly activeView = signal<'stock' | 'history'>('stock');
   readonly loading = signal(false);
   readonly loadingMore = signal(false);
   readonly hasMore = signal(false);
@@ -35,6 +43,93 @@ export class App {
   readonly withdrawalPending = signal(false);
   readonly withdrawalError = signal('');
   readonly actionMessage = signal('');
+  readonly movements = signal<StockMovement[]>([]);
+  readonly movementLoading = signal(false);
+  readonly movementLoadingMore = signal(false);
+  readonly movementHasMore = signal(false);
+  readonly movementError = signal('');
+
+  showStock(): void {
+    this.activeView.set('stock');
+  }
+
+  showHistory(): void {
+    this.activeView.set('history');
+    this.loadMovements();
+  }
+
+  loadMovements(): void {
+    const requestVersion = ++this.movementLoadVersion;
+    this.movementLoading.set(true);
+    this.movementLoadingMore.set(false);
+    this.movementError.set('');
+    this.stockMovementService.list().subscribe({
+      next: (result) => {
+        if (requestVersion !== this.movementLoadVersion) {
+          return;
+        }
+        this.movements.set(result.content);
+        this.movementCursorCreatedAt = result.nextCursorCreatedAt;
+        this.movementCursorId = result.nextCursorId;
+        this.movementHasMore.set(result.hasNext);
+        this.movementLoading.set(false);
+      },
+      error: (error: HttpErrorResponse) => {
+        if (requestVersion !== this.movementLoadVersion) {
+          return;
+        }
+        if (error.status === 401) {
+          this.logout();
+          return;
+        }
+        this.movementError.set('Não foi possível carregar o histórico.');
+        this.movementLoading.set(false);
+      },
+    });
+  }
+
+  loadMoreMovements(): void {
+    const cursorCreatedAt = this.movementCursorCreatedAt;
+    const cursorId = this.movementCursorId;
+    if (
+      this.movementLoadingMore() ||
+      !this.movementHasMore() ||
+      cursorCreatedAt === null ||
+      cursorId === null
+    ) {
+      return;
+    }
+
+    const requestVersion = ++this.movementLoadVersion;
+    this.movementLoadingMore.set(true);
+    this.stockMovementService.list(20, cursorCreatedAt, cursorId).subscribe({
+      next: (result) => {
+        if (requestVersion !== this.movementLoadVersion) {
+          return;
+        }
+        const knownIds = new Set(this.movements().map((movement) => movement.id));
+        this.movements.update((movements) => [
+          ...movements,
+          ...result.content.filter((movement) => !knownIds.has(movement.id)),
+        ]);
+        this.movementCursorCreatedAt = result.nextCursorCreatedAt;
+        this.movementCursorId = result.nextCursorId;
+        this.movementHasMore.set(result.hasNext);
+        this.movementLoadingMore.set(false);
+      },
+      error: (error: HttpErrorResponse) => {
+        if (requestVersion !== this.movementLoadVersion) {
+          return;
+        }
+        if (error.status === 401) {
+          this.logout();
+          return;
+        }
+        this.movementError.set('Não foi possível carregar mais movimentações.');
+        this.movementLoadingMore.set(false);
+      },
+    });
+  }
 
   loadEntries(entriesToPreserve: StockEntry[] = []): void {
     const requestVersion = ++this.loadVersion;
@@ -119,6 +214,7 @@ export class App {
       ),
     );
     this.hasMore.set(this.entries().length < this.totalElements);
+    this.resetMovements();
 
     if (needsAuthoritativeReload) {
       this.loadEntries([entry]);
@@ -185,6 +281,11 @@ export class App {
             : `Saldo de ${updatedEntry.productName} atualizado para ${updatedEntry.availableQuantity}.`,
         );
         this.withdrawalPending.set(false);
+        if (this.activeView() === 'history') {
+          this.loadMovements();
+        } else {
+          this.resetMovements();
+        }
         const detailsPanel = this.detailsPanel();
         if (detailsPanel) {
           detailsPanel.close();
@@ -228,7 +329,20 @@ export class App {
     this.errorMessage.set('');
     this.currentPage = -1;
     this.totalElements = 0;
+    this.activeView.set('stock');
+    this.resetMovements();
     this.closeDetails();
     this.actionMessage.set('');
+  }
+
+  private resetMovements(): void {
+    this.movementLoadVersion += 1;
+    this.movements.set([]);
+    this.movementLoading.set(false);
+    this.movementLoadingMore.set(false);
+    this.movementHasMore.set(false);
+    this.movementError.set('');
+    this.movementCursorCreatedAt = null;
+    this.movementCursorId = null;
   }
 }

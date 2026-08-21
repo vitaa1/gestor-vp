@@ -19,31 +19,69 @@
   </header>
 
   <main id="top">
+    <nav class="primary-navigation" aria-label="Navegação principal">
+      <button
+        data-view="stock"
+        type="button"
+        [attr.aria-current]="activeView() === 'stock' ? 'page' : null"
+        (click)="showStock()"
+      >
+        Estoque
+      </button>
+      <button
+        data-view="history"
+        type="button"
+        [attr.aria-current]="activeView() === 'history' ? 'page' : null"
+        (click)="showHistory()"
+      >
+        Histórico
+      </button>
+    </nav>
+
     <section class="hero" aria-labelledby="page-title">
-      <p class="eyebrow">Seu estoque em ordem</p>
-      <h1 id="page-title">O que vence primeiro aparece primeiro.</h1>
-      <p>Cadastre uma mercadoria e veja rapidamente o que precisa da sua atenção.</p>
+      @if (activeView() === 'stock') {
+        <p class="eyebrow">Seu estoque em ordem</p>
+        <h1 id="page-title">O que vence primeiro aparece primeiro.</h1>
+        <p>Cadastre uma mercadoria e veja rapidamente o que precisa da sua atenção.</p>
+      } @else {
+        <p class="eyebrow">Tudo registrado</p>
+        <h1 id="page-title">Entenda o que aconteceu no estoque.</h1>
+        <p>Consulte entradas e retiradas em ordem, das mais recentes para as mais antigas.</p>
+      }
     </section>
 
-    <app-stock-entry-form
-      [creationDisabled]="loading() || loadingMore()"
-      (entryCreated)="addCreatedEntry($event)"
-    />
+    @if (activeView() === 'stock') {
+      <app-stock-entry-form
+        [creationDisabled]="loading() || loadingMore()"
+        (entryCreated)="addCreatedEntry($event)"
+      />
 
-    @if (actionMessage()) {
-      <p class="action-message" role="status">{{ actionMessage() }}</p>
+      @if (actionMessage()) {
+        <p class="action-message" role="status">{{ actionMessage() }}</p>
+      }
+
+      <app-stock-entry-list
+        [entries]="entries()"
+        [loading]="loading()"
+        [loadingMore]="loadingMore()"
+        [hasMore]="hasMore()"
+        [errorMessage]="errorMessage()"
+        (retryRequested)="loadEntries()"
+        (loadMoreRequested)="loadMore()"
+        (detailsRequested)="openDetails($event)"
+      />
+    } @else {
+      <app-stock-movement-list
+        [movements]="movements()"
+        [loading]="movementLoading()"
+        [loadingMore]="movementLoadingMore()"
+        [hasMore]="movementHasMore()"
+        [errorMessage]="movementError()"
+        (retryRequested)="loadMovements()"
+        (loadMoreRequested)="loadMoreMovements()"
+        (detailsRequested)="openDetails($event)"
+      />
     }
-
-    <app-stock-entry-list
-      [entries]="entries()"
-      [loading]="loading()"
-      [loadingMore]="loadingMore()"
-      [hasMore]="hasMore()"
-      [errorMessage]="errorMessage()"
-      (retryRequested)="loadEntries()"
-      (loadMoreRequested)="loadMore()"
-      (detailsRequested)="openDetails($event)"
-    />
   </main>
 
   @if (detailsOpen()) {
