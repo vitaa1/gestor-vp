@@ -5,6 +5,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,18 +31,64 @@ class StockEntryService {
 		String productName = ProductNameNormalizer.displayName(request.productName());
 		String normalizedName = ProductNameNormalizer.legacyNormalizedName(productName);
 		String searchName = ProductNameNormalizer.searchName(productName);
+		String barcode = optionalText(request.barcode());
+		String category = optionalText(request.category());
+		String supplier = optionalText(request.supplier());
+		String batchNumber = optionalText(request.batchNumber());
 		Instant now = clock.instant();
+		if (barcode != null) {
+			productRepository.findByBarcode(barcode).filter(product -> !product.getSearchName().equals(searchName))
+				.ifPresent(product -> {
+					throw new BarcodeConflictException(
+							"O código de barras informado já pertence a outro produto.");
+				});
+		}
 
 		Product product = productRepository.findFirstBySearchNameOrderById(searchName).orElseGet(() -> {
-			productRepository.insertIfAbsent(productName, normalizedName, now);
+			try {
+				productRepository.insertIfAbsent(productName, normalizedName, barcode, category, now);
+			}
+			catch (DataIntegrityViolationException exception) {
+				throw new BarcodeConflictException(
+						"O código de barras informado já pertence a outro produto.");
+			}
 			return productRepository.findFirstBySearchNameOrderById(searchName)
 					.orElseThrow(() -> new IllegalStateException("Product was not available after creation"));
 		});
+		if (barcode != null) {
+			try {
+				if (productRepository.claimBarcode(product.getId(), barcode) == 0) {
+					throw new BarcodeConflictException("O produto informado já possui outro código de barras.");
+				}
+			}
+			catch (DataIntegrityViolationException exception) {
+				throw new BarcodeConflictException(
+						"O código de barras informado já pertence a outro produto.");
+			}
+			product = productRepository.findFirstBySearchNameOrderById(searchName)
+					.orElseThrow(() -> new IllegalStateException("Product was not available after barcode claim"));
+		}
+		if (category != null) {
+			if (productRepository.claimCategory(product.getId(), category) == 0) {
+				throw new ProductCategoryConflictException(
+						"O produto informado já pertence a outra categoria.");
+			}
+			product = productRepository.findFirstBySearchNameOrderById(searchName)
+					.orElseThrow(() -> new IllegalStateException("Product was not available after category claim"));
+		}
 		StockEntry entry = stockEntryRepository.save(
-				new StockEntry(product, request.quantity(), request.expirationDate(), now));
+				new StockEntry(product, request.quantity(), request.expirationDate(), request.unitCost(), supplier,
+						batchNumber, now));
 		stockMovementRepository.save(new StockMovement(entry, MovementType.ENTRY, request.quantity(), now));
 
 		return StockEntryResponse.from(entry, today);
+	}
+
+	private String optionalText(String value) {
+		if (value == null || value.isBlank()) {
+			return null;
+		}
+		return value.trim();
 	}
 
 	@Transactional(readOnly = true)

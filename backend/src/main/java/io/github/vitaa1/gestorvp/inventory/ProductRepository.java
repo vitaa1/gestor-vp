@@ -14,13 +14,34 @@ interface ProductRepository extends JpaRepository<Product, Long> {
 
 	Optional<Product> findFirstBySearchNameOrderById(String searchName);
 
+	Optional<Product> findByBarcode(String barcode);
+
 	@Modifying(flushAutomatically = true)
 	@Query(value = """
-			insert into products (name, normalized_name, created_at)
-			values (:name, :normalizedName, :createdAt)
+			insert into products (name, normalized_name, barcode, category, created_at)
+			values (:name, :normalizedName, :barcode, :category, :createdAt)
 			on conflict (normalized_name) do nothing
 			""", nativeQuery = true)
 	int insertIfAbsent(@Param("name") String name, @Param("normalizedName") String normalizedName,
+			@Param("barcode") String barcode, @Param("category") String category,
 			@Param("createdAt") Instant createdAt);
+
+	@Modifying(flushAutomatically = true, clearAutomatically = true)
+	@Query(value = """
+			update products
+			set barcode = :barcode
+			where id = :productId
+			  and (barcode is null or barcode = :barcode)
+			""", nativeQuery = true)
+	int claimBarcode(@Param("productId") long productId, @Param("barcode") String barcode);
+
+	@Modifying(flushAutomatically = true, clearAutomatically = true)
+	@Query(value = """
+			update products
+			set category = :category
+			where id = :productId
+			  and (category is null or category = :category)
+			""", nativeQuery = true)
+	int claimCategory(@Param("productId") long productId, @Param("category") String category);
 
 }

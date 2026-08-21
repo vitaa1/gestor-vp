@@ -50,6 +50,94 @@
       }
     </div>
 
+    <details #optionalDetails class="optional-details">
+      <summary>
+        <span>Mais detalhes</span>
+        <small>Opcional</small>
+      </summary>
+      <div class="optional-details__fields">
+        <div class="field">
+          <label for="barcode">Código de barras</label>
+          <input
+            id="barcode"
+            type="text"
+            formControlName="barcode"
+            inputmode="numeric"
+            maxlength="14"
+            autocomplete="off"
+            placeholder="8 a 14 dígitos"
+          />
+          @if (form.controls.barcode.touched && form.controls.barcode.hasError('pattern')) {
+            <p class="field-error">Informe somente de 8 a 14 dígitos.</p>
+          }
+        </div>
+
+        <div class="field">
+          <label for="category">Categoria</label>
+          <input
+            id="category"
+            type="text"
+            formControlName="category"
+            maxlength="120"
+            autocomplete="off"
+            placeholder="Ex.: Mercearia"
+          />
+          @if (form.controls.category.touched && form.controls.category.hasError('maxlength')) {
+            <p class="field-error">Use no máximo 120 caracteres.</p>
+          }
+        </div>
+
+        <div class="field">
+          <label for="unit-cost">Preço de custo unitário</label>
+          <input
+            id="unit-cost"
+            type="number"
+            formControlName="unitCost"
+            min="0"
+            max="9999999999.99"
+            step="0.01"
+            inputmode="decimal"
+            placeholder="0,00"
+          />
+          @if (form.controls.unitCost.touched && form.controls.unitCost.invalid) {
+            <p class="field-error">Informe um valor igual ou maior que zero, com até duas casas.</p>
+          }
+        </div>
+
+        <div class="field">
+          <label for="supplier">Fornecedor</label>
+          <input
+            id="supplier"
+            type="text"
+            formControlName="supplier"
+            maxlength="120"
+            autocomplete="off"
+            placeholder="Ex.: Distribuidora Central"
+          />
+          @if (form.controls.supplier.touched && form.controls.supplier.hasError('maxlength')) {
+            <p class="field-error">Use no máximo 120 caracteres.</p>
+          }
+        </div>
+
+        <div class="field field--wide">
+          <label for="batch-number">Número do lote</label>
+          <input
+            id="batch-number"
+            type="text"
+            formControlName="batchNumber"
+            maxlength="120"
+            autocomplete="off"
+            placeholder="Ex.: LOTE-2030-A"
+          />
+          @if (
+            form.controls.batchNumber.touched && form.controls.batchNumber.hasError('maxlength')
+          ) {
+            <p class="field-error">Use no máximo 120 caracteres.</p>
+          }
+        </div>
+      </div>
+    </details>
+
     <button type="submit" [disabled]="submitting() || creationDisabled()">
       {{ submitting() ? 'Adicionando…' : 'Adicionar produto' }}
     </button>

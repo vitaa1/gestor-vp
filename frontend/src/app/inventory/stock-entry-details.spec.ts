@@ -5,9 +5,14 @@ import { StockEntryDetailsModel } from './stock-entry.model';
 const activeEntry: StockEntryDetailsModel = {
   id: 1,
   productName: 'Leite Integral',
+  barcode: null,
+  category: null,
   initialQuantity: 12,
   availableQuantity: 7,
   expirationDate: '2030-01-10',
+  unitCost: null,
+  supplier: null,
+  batchNumber: null,
   status: 'OK',
   statusLabel: 'Tudo certo',
   daysUntilExpiration: 1200,
@@ -94,6 +99,31 @@ describe('StockEntryDetails', () => {
     );
     expect(element.querySelector('.withdrawal-form')).toBeNull();
     expect(element.querySelector('[data-action="review"]')).toBeNull();
+  });
+
+  it('shows every optional detail that was informed', () => {
+    const fixture = TestBed.createComponent(StockEntryDetails);
+    fixture.componentRef.setInput('entry', {
+      ...activeEntry,
+      barcode: '07891234567890',
+      category: 'Mercearia',
+      unitCost: 18.75,
+      supplier: 'Torrefação Central',
+      batchNumber: 'LOTE-2030-A',
+    });
+    fixture.detectChanges();
+    const text = (fixture.nativeElement as HTMLElement).textContent;
+
+    expect(text).toContain('Código de barras');
+    expect(text).toContain('07891234567890');
+    expect(text).toContain('Categoria');
+    expect(text).toContain('Mercearia');
+    expect(text).toContain('Preço de custo unitário');
+    expect(text).toContain('R$ 18,75');
+    expect(text).toContain('Fornecedor');
+    expect(text).toContain('Torrefação Central');
+    expect(text).toContain('Número do lote');
+    expect(text).toContain('LOTE-2030-A');
   });
 
   it('opens as a modal dialog and emits close when requested', () => {

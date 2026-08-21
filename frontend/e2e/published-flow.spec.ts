@@ -23,10 +23,18 @@ test('completes the inventory and history flow through the published application
     page.getByRole('heading', { name: 'O que vence primeiro aparece primeiro.' }),
   ).toBeVisible();
 
-  const productName = `Produto E2E ${testInfo.project.name} tentativa ${testInfo.retry}`;
+  const runId = Date.now().toString();
+  const productName = `Produto E2E ${testInfo.project.name} ${runId}`;
+  const barcode = `${runId}${testInfo.project.name === 'mobile-chromium' ? '2' : '1'}`;
   await page.getByLabel('Nome do produto').fill(productName);
   await page.getByLabel('Quantidade').fill('3');
   await page.getByLabel('Data de validade').fill('2035-12-31');
+  await page.locator('details.optional-details').getByText('Mais detalhes').click();
+  await page.getByLabel('Código de barras').fill(barcode);
+  await page.getByLabel('Categoria').fill('Teste E2E');
+  await page.getByLabel('Preço de custo unitário').fill('18.75');
+  await page.getByLabel('Fornecedor').fill('Fornecedor E2E');
+  await page.getByLabel('Número do lote').fill('LOTE-E2E');
   await page.getByRole('button', { name: 'Adicionar produto' }).click();
 
   await expect(page.getByText('Produto adicionado!')).toBeVisible();
@@ -42,6 +50,12 @@ test('completes the inventory and history flow through the published application
   await expect(entryCard).toBeVisible();
 
   await entryCard.getByRole('button', { name: 'Ver detalhes' }).click();
+  const activeDetailsDialog = page.getByRole('dialog');
+  await expect(activeDetailsDialog.getByText(barcode)).toBeVisible();
+  await expect(activeDetailsDialog.getByText('Teste E2E')).toBeVisible();
+  await expect(activeDetailsDialog.getByText('R$ 18,75')).toBeVisible();
+  await expect(activeDetailsDialog.getByText('Fornecedor E2E')).toBeVisible();
+  await expect(activeDetailsDialog.getByText('LOTE-E2E')).toBeVisible();
   await page.locator('#withdrawal-quantity').fill('3');
   await page.locator('#withdrawal-reason').selectOption('USED');
   await page.getByRole('button', { name: 'Revisar retirada' }).click();

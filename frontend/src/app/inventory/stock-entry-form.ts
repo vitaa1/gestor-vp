@@ -1,5 +1,5 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, inject, input, output, signal } from '@angular/core';
+import { Component, ElementRef, inject, input, output, signal, viewChild } from '@angular/core';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { finalize } from 'rxjs';
 import { StockEntry } from './stock-entry.model';
@@ -20,6 +20,7 @@ export class StockEntryForm {
   readonly submitting = signal(false);
   readonly successMessage = signal('');
   readonly errorMessage = signal('');
+  private readonly optionalDetails = viewChild<ElementRef<HTMLDetailsElement>>('optionalDetails');
 
   readonly form = this.formBuilder.group({
     productName: [
@@ -36,6 +37,18 @@ export class StockEntryForm {
       ],
     ],
     expirationDate: ['', Validators.required],
+    barcode: ['', Validators.pattern(/^\d{8,14}$/)],
+    category: ['', Validators.maxLength(120)],
+    unitCost: [
+      '',
+      [
+        Validators.min(0),
+        Validators.max(9_999_999_999.99),
+        Validators.pattern(/^\d+(?:\.\d{1,2})?$/),
+      ],
+    ],
+    supplier: ['', Validators.maxLength(120)],
+    batchNumber: ['', Validators.maxLength(120)],
   });
 
   submit(): void {
@@ -48,29 +61,76 @@ export class StockEntryForm {
 
     if (this.form.invalid) {
       this.form.markAllAsTouched();
+      this.revealFirstInvalidOptionalField();
       return;
     }
 
     this.submitting.set(true);
+    const value = this.form.getRawValue();
     this.stockEntryService
       .create({
-        ...this.form.getRawValue(),
-        productName: this.form.controls.productName.value.trim(),
+        productName: value.productName.trim(),
+        quantity: value.quantity,
+        expirationDate: value.expirationDate,
+        barcode: this.optionalText(value.barcode),
+        category: this.optionalText(value.category),
+        unitCost: value.unitCost === '' ? null : Number(value.unitCost),
+        supplier: this.optionalText(value.supplier),
+        batchNumber: this.optionalText(value.batchNumber),
       })
       .pipe(finalize(() => this.submitting.set(false)))
       .subscribe({
         next: (entry) => {
           this.entryCreated.emit(entry);
           this.successMessage.set('Produto adicionado!');
-          this.form.reset({ productName: '', quantity: 1, expirationDate: '' });
+          this.form.reset({
+            productName: '',
+            quantity: 1,
+            expirationDate: '',
+            barcode: '',
+            category: '',
+            unitCost: '',
+            supplier: '',
+            batchNumber: '',
+          });
         },
         error: (error: HttpErrorResponse) => {
+          const conflictDetail =
+            error.status === 409 && typeof error.error?.detail === 'string'
+              ? error.error.detail
+              : null;
           this.errorMessage.set(
             error.status === 0
               ? 'Não foi possível acessar o servidor. Tente novamente.'
-              : 'Não foi possível adicionar o produto. Confira os dados e tente novamente.',
+              : (conflictDetail ??
+                  'Não foi possível adicionar o produto. Confira os dados e tente novamente.'),
           );
         },
       });
+  }
+
+  private optionalText(value: string): string | null {
+    const trimmed = value.trim();
+    return trimmed === '' ? null : trimmed;
+  }
+
+  private revealFirstInvalidOptionalField(): void {
+    const optionalFields = [
+      ['barcode', 'barcode'],
+      ['category', 'category'],
+      ['unitCost', 'unit-cost'],
+      ['supplier', 'supplier'],
+      ['batchNumber', 'batch-number'],
+    ] as const;
+    const invalidField = optionalFields.find(
+      ([controlName]) => this.form.controls[controlName].invalid,
+    );
+    const details = this.optionalDetails()?.nativeElement;
+    if (invalidField === undefined || details === undefined) {
+      return;
+    }
+
+    details.open = true;
+    details.querySelector<HTMLInputElement>(`#${invalidField[1]}`)?.focus();
   }
 }

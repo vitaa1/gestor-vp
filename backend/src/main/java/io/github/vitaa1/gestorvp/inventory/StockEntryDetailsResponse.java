@@ -1,5 +1,6 @@
 package io.github.vitaa1.gestorvp.inventory;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
@@ -7,9 +8,14 @@ import java.time.temporal.ChronoUnit;
 public record StockEntryDetailsResponse(
 		Long id,
 		String productName,
+		String barcode,
+		String category,
 		int initialQuantity,
 		int availableQuantity,
 		LocalDate expirationDate,
+		BigDecimal unitCost,
+		String supplier,
+		String batchNumber,
 		ExpirationStatus status,
 		String statusLabel,
 		long daysUntilExpiration,
@@ -20,9 +26,14 @@ public record StockEntryDetailsResponse(
 		return new StockEntryDetailsResponse(
 				entry.getId(),
 				entry.getProduct().getName(),
+				entry.getProduct().getBarcode(),
+				entry.getProduct().getCategory(),
 				entry.getInitialQuantity(),
 				entry.getAvailableQuantity(),
 				entry.getExpirationDate(),
+				entry.getUnitCost(),
+				entry.getSupplier(),
+				entry.getBatchNumber(),
 				status,
 				status.getLabel(),
 				ChronoUnit.DAYS.between(today, entry.getExpirationDate()),

@@ -55,6 +55,44 @@
       </div>
     </dl>
 
+    @if (hasOptionalDetails(selectedEntry)) {
+      <section class="optional-facts" aria-labelledby="optional-facts-title">
+        <h3 id="optional-facts-title">Mais detalhes</h3>
+        <dl>
+          @if (selectedEntry.barcode) {
+            <div>
+              <dt>Código de barras</dt>
+              <dd>{{ selectedEntry.barcode }}</dd>
+            </div>
+          }
+          @if (selectedEntry.category) {
+            <div>
+              <dt>Categoria</dt>
+              <dd>{{ selectedEntry.category }}</dd>
+            </div>
+          }
+          @if (selectedEntry.unitCost !== null) {
+            <div>
+              <dt>Preço de custo unitário</dt>
+              <dd>{{ formatCurrency(selectedEntry.unitCost) }}</dd>
+            </div>
+          }
+          @if (selectedEntry.supplier) {
+            <div>
+              <dt>Fornecedor</dt>
+              <dd>{{ selectedEntry.supplier }}</dd>
+            </div>
+          }
+          @if (selectedEntry.batchNumber) {
+            <div>
+              <dt>Número do lote</dt>
+              <dd>{{ selectedEntry.batchNumber }}</dd>
+            </div>
+          }
+        </dl>
+      </section>
+    }
+
     @if (selectedEntry.availableQuantity === 0) {
       <p class="closed-entry">Esta entrada está encerrada e disponível somente para consulta.</p>
     } @else if (!confirming()) {
