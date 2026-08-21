@@ -40,12 +40,18 @@ export class Login {
           this.loggedIn.emit();
         },
         error: (error: HttpErrorResponse) => {
-          this.errorMessage.set(
-            error.status === 401
-              ? 'Usuário ou senha incorretos.'
-              : 'Não foi possível entrar. Tente novamente.',
-          );
+          this.errorMessage.set(this.loginErrorMessage(error.status));
         },
       });
+  }
+
+  private loginErrorMessage(status: number): string {
+    if (status === 401) {
+      return 'Usuário ou senha incorretos.';
+    }
+    if (status === 429) {
+      return 'Muitas tentativas de login. Aguarde alguns minutos e tente novamente.';
+    }
+    return 'Não foi possível entrar. Tente novamente.';
   }
 }
