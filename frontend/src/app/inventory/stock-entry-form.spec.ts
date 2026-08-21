@@ -45,6 +45,21 @@ describe('StockEntryForm', () => {
     expect(service.create).not.toHaveBeenCalled();
   });
 
+  it('allows the expiration date field to shrink inside the mobile layout', () => {
+    const fixture = TestBed.createComponent(StockEntryForm);
+    fixture.detectChanges();
+    const expirationDate = (fixture.nativeElement as HTMLElement).querySelector<HTMLInputElement>(
+      '#expiration-date',
+    );
+    const field = expirationDate?.closest<HTMLElement>('.field');
+
+    expect(expirationDate).not.toBeNull();
+    expect(field).not.toBeNull();
+    expect(getComputedStyle(field!).minWidth).toBe('0px');
+    expect(getComputedStyle(expirationDate!).minWidth).toBe('0px');
+    expect(getComputedStyle(expirationDate!).maxWidth).toBe('100%');
+  });
+
   it('should reject whitespace-only names and decimal quantities', () => {
     const fixture = TestBed.createComponent(StockEntryForm);
     const component = fixture.componentInstance;
@@ -52,11 +67,61 @@ describe('StockEntryForm', () => {
     component.form.patchValue({
       productName: '   ',
       quantity: 1.5,
-      expirationDate: '2026-08-20',
+      expirationDate: '20/08/2026',
     });
     component.submit();
 
     expect(component.form.invalid).toBe(true);
+    expect(service.create).not.toHaveBeenCalled();
+  });
+
+  it('formats the expiration date as day, month and year while typing', () => {
+    const fixture = TestBed.createComponent(StockEntryForm);
+    fixture.detectChanges();
+    const expirationDate = (fixture.nativeElement as HTMLElement).querySelector<HTMLInputElement>(
+      '#expiration-date',
+    )!;
+
+    expirationDate.value = '31122035';
+    expirationDate.dispatchEvent(new Event('input'));
+
+    expect(expirationDate.value).toBe('31/12/2035');
+    expect(fixture.componentInstance.form.controls.expirationDate.value).toBe('31/12/2035');
+  });
+
+  it('preserves the date segments when correcting the month with the keyboard', () => {
+    const fixture = TestBed.createComponent(StockEntryForm);
+    fixture.detectChanges();
+    const expirationDate = (fixture.nativeElement as HTMLElement).querySelector<HTMLInputElement>(
+      '#expiration-date',
+    )!;
+
+    expirationDate.value = '31/1/2035';
+    expirationDate.setSelectionRange(4, 4);
+    expirationDate.dispatchEvent(new Event('input'));
+
+    const caret = expirationDate.selectionStart!;
+    expirationDate.value = `${expirationDate.value.slice(0, caret)}1${expirationDate.value.slice(caret)}`;
+    expirationDate.setSelectionRange(caret + 1, caret + 1);
+    expirationDate.dispatchEvent(new Event('input'));
+
+    expect(expirationDate.value).toBe('31/11/2035');
+    expect(expirationDate.selectionStart).toBe(5);
+    expect(fixture.componentInstance.form.controls.expirationDate.value).toBe('31/11/2035');
+  });
+
+  it('rejects an expiration date that does not exist', () => {
+    const fixture = TestBed.createComponent(StockEntryForm);
+    const component = fixture.componentInstance;
+    component.form.patchValue({
+      productName: 'Leite Integral',
+      quantity: 1,
+      expirationDate: '31/02/2035',
+    });
+
+    component.submit();
+
+    expect(component.form.controls.expirationDate.hasError('invalidDate')).toBe(true);
     expect(service.create).not.toHaveBeenCalled();
   });
 
@@ -67,7 +132,7 @@ describe('StockEntryForm', () => {
     component.form.patchValue({
       productName: 'Leite Integral',
       quantity: 12,
-      expirationDate: '2026-08-20',
+      expirationDate: '20/08/2026',
     });
 
     component.submit();
@@ -83,7 +148,7 @@ describe('StockEntryForm', () => {
     component.form.patchValue({
       productName: 'Leite Integral',
       quantity: 12,
-      expirationDate: '2026-08-20',
+      expirationDate: '20/08/2026',
     });
 
     component.submit();
@@ -133,7 +198,7 @@ describe('StockEntryForm', () => {
     component.form.patchValue({
       productName: ' Café Especial ',
       quantity: 6,
-      expirationDate: '2030-04-15',
+      expirationDate: '15/04/2030',
       barcode: '07891234567890',
       category: ' Mercearia ',
       unitCost: '18.75',
@@ -170,7 +235,7 @@ describe('StockEntryForm', () => {
     component.form.patchValue({
       productName: 'Produto B',
       quantity: 1,
-      expirationDate: '2030-01-01',
+      expirationDate: '01/01/2030',
       barcode: '7891234567890',
     });
 

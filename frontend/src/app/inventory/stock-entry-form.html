@@ -44,9 +44,30 @@
 
     <div class="field">
       <label for="expiration-date">Data de validade</label>
-      <input id="expiration-date" type="date" formControlName="expirationDate" />
-      @if (form.controls.expirationDate.touched && form.controls.expirationDate.invalid) {
+      <input
+        id="expiration-date"
+        type="text"
+        formControlName="expirationDate"
+        inputmode="numeric"
+        maxlength="10"
+        autocomplete="off"
+        placeholder="dd/mm/aaaa"
+        (input)="formatExpirationDate($event)"
+      />
+      @if (
+        form.controls.expirationDate.touched && form.controls.expirationDate.hasError('required')
+      ) {
         <p class="field-error">Informe a data de validade.</p>
+      }
+      @if (
+        form.controls.expirationDate.touched && form.controls.expirationDate.hasError('pattern')
+      ) {
+        <p class="field-error">Use o formato dia/mês/ano.</p>
+      }
+      @if (
+        form.controls.expirationDate.touched && form.controls.expirationDate.hasError('invalidDate')
+      ) {
+        <p class="field-error">Informe uma data de validade existente.</p>
       }
     </div>
 
