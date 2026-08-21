@@ -8,7 +8,12 @@ import { StockMovementService } from './history/stock-movement.service';
 import { StockEntryDetails } from './inventory/stock-entry-details';
 import { StockEntryForm } from './inventory/stock-entry-form';
 import { StockEntryList } from './inventory/stock-entry-list';
-import { StockEntry, StockEntryDetailsModel, WithdrawStock } from './inventory/stock-entry.model';
+import {
+  StockEntry,
+  StockEntryDetailsModel,
+  StockEntryPage,
+  WithdrawStock,
+} from './inventory/stock-entry.model';
 import { StockEntryService } from './inventory/stock-entry.service';
 
 @Component({
@@ -22,8 +27,10 @@ export class App {
   private readonly stockMovementService = inject(StockMovementService);
   readonly authService = inject(AuthService);
   private loadVersion = 0;
-  private currentPage = -1;
-  private totalElements = 0;
+  private inventoryLoaded = false;
+  private entryCursorExpirationDate: string | null = null;
+  private entryCursorCreatedAt: string | null = null;
+  private entryCursorId: number | null = null;
   private detailsLoadVersion = 0;
   private movementLoadVersion = 0;
   private movementCursorCreatedAt: string | null = null;
@@ -143,14 +150,14 @@ export class App {
         }
         const pageIds = new Set(result.content.map((entry) => entry.id));
         this.entries.set(
-          [...result.content, ...entriesToPreserve.filter((entry) => !pageIds.has(entry.id))].sort(
-            (first, second) =>
-              first.expirationDate.localeCompare(second.expirationDate) || first.id - second.id,
-          ),
+          this.sortEntries([
+            ...result.content,
+            ...entriesToPreserve.filter((entry) => !pageIds.has(entry.id)),
+          ]),
         );
-        this.currentPage = result.page;
-        this.totalElements = result.totalElements;
-        this.hasMore.set(this.entries().length < this.totalElements);
+        this.inventoryLoaded = true;
+        this.setEntryCursor(result);
+        this.hasMore.set(result.hasNext);
         this.loading.set(false);
       },
       error: (error: HttpErrorResponse) => {
@@ -168,27 +175,35 @@ export class App {
   }
 
   loadMore(): void {
-    if (this.loadingMore() || !this.hasMore()) {
+    const cursorExpirationDate = this.entryCursorExpirationDate;
+    const cursorCreatedAt = this.entryCursorCreatedAt;
+    const cursorId = this.entryCursorId;
+    if (
+      this.loadingMore() ||
+      !this.hasMore() ||
+      cursorExpirationDate === null ||
+      cursorCreatedAt === null ||
+      cursorId === null
+    ) {
       return;
     }
 
     const requestVersion = ++this.loadVersion;
     this.loadingMore.set(true);
-    this.stockEntryService.list(this.currentPage + 1).subscribe({
+    this.stockEntryService.list(50, cursorExpirationDate, cursorCreatedAt, cursorId).subscribe({
       next: (result) => {
         if (requestVersion !== this.loadVersion) {
           return;
         }
         const knownIds = new Set(this.entries().map((entry) => entry.id));
         this.entries.update((entries) =>
-          [...entries, ...result.content.filter((entry) => !knownIds.has(entry.id))].sort(
-            (first, second) =>
-              first.expirationDate.localeCompare(second.expirationDate) || first.id - second.id,
-          ),
+          this.sortEntries([
+            ...entries,
+            ...result.content.filter((entry) => !knownIds.has(entry.id)),
+          ]),
         );
-        this.currentPage = result.page;
-        this.totalElements = result.totalElements;
-        this.hasMore.set(this.entries().length < this.totalElements);
+        this.setEntryCursor(result);
+        this.hasMore.set(result.hasNext);
         this.loadingMore.set(false);
       },
       error: () => {
@@ -201,19 +216,12 @@ export class App {
   }
 
   addCreatedEntry(entry: StockEntry): void {
-    const needsAuthoritativeReload = this.currentPage < 0;
+    const needsAuthoritativeReload = !this.inventoryLoaded;
     this.loadVersion += 1;
     this.loading.set(false);
     this.loadingMore.set(false);
     this.errorMessage.set('');
-    this.totalElements += 1;
-    this.entries.update((entries) =>
-      [...entries, entry].sort(
-        (first, second) =>
-          first.expirationDate.localeCompare(second.expirationDate) || first.id - second.id,
-      ),
-    );
-    this.hasMore.set(this.entries().length < this.totalElements);
+    this.entries.update((entries) => this.sortEntries([...entries, entry]));
     this.resetMovements();
 
     if (needsAuthoritativeReload) {
@@ -271,10 +279,6 @@ export class App {
                   : candidate,
               ),
         );
-        if (entryWasClosed) {
-          this.totalElements = Math.max(0, this.totalElements - 1);
-        }
-        this.hasMore.set(this.entries().length < this.totalElements);
         this.actionMessage.set(
           entryWasClosed
             ? `${updatedEntry.productName} saiu do estoque ativo.`
@@ -327,8 +331,10 @@ export class App {
     this.loadingMore.set(false);
     this.hasMore.set(false);
     this.errorMessage.set('');
-    this.currentPage = -1;
-    this.totalElements = 0;
+    this.inventoryLoaded = false;
+    this.entryCursorExpirationDate = null;
+    this.entryCursorCreatedAt = null;
+    this.entryCursorId = null;
     this.activeView.set('stock');
     this.resetMovements();
     this.closeDetails();
@@ -344,5 +350,20 @@ export class App {
     this.movementError.set('');
     this.movementCursorCreatedAt = null;
     this.movementCursorId = null;
+  }
+
+  private setEntryCursor(result: StockEntryPage): void {
+    this.entryCursorExpirationDate = result.nextCursorExpirationDate;
+    this.entryCursorCreatedAt = result.nextCursorCreatedAt;
+    this.entryCursorId = result.nextCursorId;
+  }
+
+  private sortEntries(entriesToSort: StockEntry[]): StockEntry[] {
+    return [...entriesToSort].sort(
+      (first, second) =>
+        first.expirationDate.localeCompare(second.expirationDate) ||
+        Date.parse(first.createdAt) - Date.parse(second.createdAt) ||
+        first.id - second.id,
+    );
   }
 }

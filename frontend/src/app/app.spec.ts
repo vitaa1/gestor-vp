@@ -26,6 +26,18 @@ const entries: StockEntry[] = [
   },
 ];
 
+function stockPage(content: StockEntry[], hasNext = false): StockEntryPage {
+  const cursorEntry = hasNext ? content.at(-1)! : null;
+  return {
+    content,
+    size: content.length,
+    hasNext,
+    nextCursorExpirationDate: cursorEntry?.expirationDate ?? null,
+    nextCursorCreatedAt: cursorEntry?.createdAt ?? null,
+    nextCursorId: cursorEntry?.id ?? null,
+  };
+}
+
 const movements: StockMovement[] = [
   {
     id: 2,
@@ -44,7 +56,7 @@ const movements: StockMovement[] = [
 
 class StockEntryServiceStub {
   list() {
-    return of({ content: entries, page: 0, size: 50, totalElements: 1, totalPages: 1 });
+    return of(stockPage(entries));
   }
 
   create() {
@@ -188,7 +200,7 @@ describe('App', () => {
     ) as HTMLButtonElement;
     expect(addButton.disabled).toBe(true);
 
-    pendingPage.next({ content: [], page: 0, size: 50, totalElements: 0, totalPages: 0 });
+    pendingPage.next(stockPage([]));
     pendingPage.complete();
     fixture.detectChanges();
     expect(addButton.disabled).toBe(false);
@@ -209,12 +221,8 @@ describe('App', () => {
       expirationDate: '2030-05-20',
     };
     vi.spyOn(service, 'list')
-      .mockReturnValueOnce(
-        of({ content: entries, page: 0, size: 1, totalElements: 2, totalPages: 2 }),
-      )
-      .mockReturnValueOnce(
-        of({ content: [middleEntry], page: 1, size: 1, totalElements: 3, totalPages: 3 }),
-      );
+      .mockReturnValueOnce(of(stockPage(entries, true)))
+      .mockReturnValueOnce(of(stockPage([middleEntry])));
     const fixture = TestBed.createComponent(App);
     const component = fixture.componentInstance;
 
@@ -228,6 +236,39 @@ describe('App', () => {
       'Azeite',
     ]);
     expect(component.loadingMore()).toBe(false);
+    expect(service.list).toHaveBeenNthCalledWith(
+      2,
+      50,
+      entries[0].expirationDate,
+      entries[0].createdAt,
+      entries[0].id,
+    );
+  });
+
+  it('should order equal expiration dates by the actual creation instant', () => {
+    const fixture = TestBed.createComponent(App);
+    const component = fixture.componentInstance;
+    const laterEntry = {
+      ...entries[0],
+      id: 2,
+      productName: 'Produto posterior',
+      createdAt: '2026-08-22T00:30:00.100Z',
+    };
+    const exactSecondEntry = {
+      ...entries[0],
+      id: 3,
+      productName: 'Produto no segundo exato',
+      createdAt: '2026-08-22T00:30:00Z',
+    };
+
+    component.addCreatedEntry(laterEntry);
+    component.addCreatedEntry(exactSecondEntry);
+
+    expect(component.entries().map((entry) => entry.productName)).toEqual([
+      entries[0].productName,
+      'Produto no segundo exato',
+      'Produto posterior',
+    ]);
   });
 
   it('should preserve a created entry when recovering from an initial list failure', () => {
@@ -240,9 +281,7 @@ describe('App', () => {
     };
     vi.spyOn(service, 'list')
       .mockReturnValueOnce(throwError(() => new Error('network error')))
-      .mockReturnValueOnce(
-        of({ content: entries, page: 0, size: 1, totalElements: 2, totalPages: 2 }),
-      );
+      .mockReturnValueOnce(of(stockPage(entries, true)));
     const fixture = TestBed.createComponent(App);
     const component = fixture.componentInstance;
 
@@ -276,18 +315,8 @@ describe('App', () => {
     }));
     const shiftedEntry = { ...entries[0], id: 51, productName: 'Produto 51' };
     vi.spyOn(service, 'list')
-      .mockReturnValueOnce(
-        of({ content: firstPage, page: 0, size: 50, totalElements: 51, totalPages: 2 }),
-      )
-      .mockReturnValueOnce(
-        of({
-          content: [...firstPage.slice(1), shiftedEntry],
-          page: 0,
-          size: 50,
-          totalElements: 50,
-          totalPages: 1,
-        }),
-      );
+      .mockReturnValueOnce(of(stockPage(firstPage, true)))
+      .mockReturnValueOnce(of(stockPage([...firstPage.slice(1), shiftedEntry])));
     vi.spyOn(service, 'withdraw').mockReturnValueOnce(
       of({
         ...firstPage[0],
@@ -313,13 +342,9 @@ describe('App', () => {
     const pendingPage = new Subject<StockEntryPage>();
     const remainingEntry = { ...entries[0], id: 2, productName: 'Arroz Integral' };
     vi.spyOn(service, 'list')
-      .mockReturnValueOnce(
-        of({ content: entries, page: 0, size: 50, totalElements: 2, totalPages: 2 }),
-      )
+      .mockReturnValueOnce(of(stockPage(entries, true)))
       .mockReturnValueOnce(pendingPage)
-      .mockReturnValueOnce(
-        of({ content: [remainingEntry], page: 0, size: 50, totalElements: 1, totalPages: 1 }),
-      );
+      .mockReturnValueOnce(of(stockPage([remainingEntry])));
     vi.spyOn(service, 'withdraw').mockReturnValueOnce(
       of({ ...entries[0], initialQuantity: 12, availableQuantity: 0 }),
     );
@@ -334,7 +359,7 @@ describe('App', () => {
 
     expect(component.loadingMore()).toBe(false);
     expect(component.entries()).toEqual([remainingEntry]);
-    pendingPage.next({ content: [], page: 1, size: 50, totalElements: 1, totalPages: 1 });
+    pendingPage.next(stockPage([]));
     expect(component.loadingMore()).toBe(false);
   });
 });

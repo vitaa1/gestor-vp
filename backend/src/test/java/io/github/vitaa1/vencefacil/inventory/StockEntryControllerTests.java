@@ -26,6 +26,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.Primary;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.RequestPostProcessor;
 
 import io.github.vitaa1.vencefacil.TestcontainersConfiguration;
@@ -106,8 +107,93 @@ class StockEntryControllerTests {
 		mockMvc.perform(get("/api/v1/stock-entries?size=101").with(operator()))
 			.andExpect(status().isBadRequest());
 
-		mockMvc.perform(get("/api/v1/stock-entries?page=10001").with(operator()))
+		mockMvc.perform(get("/api/v1/stock-entries?cursorId=10").with(operator()))
 			.andExpect(status().isBadRequest());
+	}
+
+	@Test
+	void keepsActiveStockPaginationStableWhenEntriesChangeBetweenSlices() throws Exception {
+		long firstEntryId = createdEntryId("Produto 1", 1, "2030-01-01");
+		long secondEntryId = createdEntryId("Produto 2", 1, "2030-01-02");
+		long thirdEntryId = createdEntryId("Produto 3", 1, "2030-01-02");
+
+		MvcResult firstSlice = mockMvc.perform(get("/api/v1/stock-entries?size=2").with(operator()))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.content", hasSize(2)))
+			.andExpect(jsonPath("$.content[0].id").value(firstEntryId))
+			.andExpect(jsonPath("$.content[1].id").value(secondEntryId))
+			.andExpect(jsonPath("$.hasNext").value(true))
+			.andExpect(jsonPath("$.nextCursorExpirationDate").value("2030-01-02"))
+			.andExpect(jsonPath("$.nextCursorCreatedAt").isString())
+			.andExpect(jsonPath("$.nextCursorId").value(secondEntryId))
+			.andReturn();
+		String cursorExpirationDate = com.jayway.jsonpath.JsonPath.read(
+				firstSlice.getResponse().getContentAsString(), "$.nextCursorExpirationDate");
+		String cursorCreatedAt = com.jayway.jsonpath.JsonPath.read(
+				firstSlice.getResponse().getContentAsString(), "$.nextCursorCreatedAt");
+		Number cursorId = com.jayway.jsonpath.JsonPath.read(
+				firstSlice.getResponse().getContentAsString(), "$.nextCursorId");
+
+		mockMvc.perform(post("/api/v1/stock-entries/{entryId}/withdrawals", firstEntryId)
+				.with(operator())
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("""
+						{"quantity":1,"reason":"USED"}
+						"""))
+			.andExpect(status().isOk());
+		createdEntryId("Produto anterior", 1, "2029-12-31");
+
+		mockMvc.perform(get("/api/v1/stock-entries")
+				.param("size", "2")
+				.param("cursorExpirationDate", cursorExpirationDate)
+				.param("cursorCreatedAt", cursorCreatedAt)
+				.param("cursorId", cursorId.toString())
+				.with(operator()))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.content", hasSize(1)))
+			.andExpect(jsonPath("$.content[0].id").value(thirdEntryId))
+			.andExpect(jsonPath("$.hasNext").value(false))
+			.andExpect(jsonPath("$.nextCursorExpirationDate").doesNotExist())
+			.andExpect(jsonPath("$.nextCursorCreatedAt").doesNotExist())
+			.andExpect(jsonPath("$.nextCursorId").doesNotExist());
+	}
+
+	@Test
+	void finishesActiveStockPaginationWhenTheRemainingEntryIsClosedBetweenSlices() throws Exception {
+		createdEntryId("Produto 1", 1, "2030-01-01");
+		long remainingEntryId = createdEntryId("Produto 2", 1, "2030-01-02");
+
+		MvcResult firstSlice = mockMvc.perform(get("/api/v1/stock-entries?size=1").with(operator()))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.hasNext").value(true))
+			.andReturn();
+		String cursorExpirationDate = com.jayway.jsonpath.JsonPath.read(
+				firstSlice.getResponse().getContentAsString(), "$.nextCursorExpirationDate");
+		String cursorCreatedAt = com.jayway.jsonpath.JsonPath.read(
+				firstSlice.getResponse().getContentAsString(), "$.nextCursorCreatedAt");
+		Number cursorId = com.jayway.jsonpath.JsonPath.read(
+				firstSlice.getResponse().getContentAsString(), "$.nextCursorId");
+
+		mockMvc.perform(post("/api/v1/stock-entries/{entryId}/withdrawals", remainingEntryId)
+				.with(operator())
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("""
+						{"quantity":1,"reason":"USED"}
+						"""))
+			.andExpect(status().isOk());
+
+		mockMvc.perform(get("/api/v1/stock-entries")
+				.param("size", "1")
+				.param("cursorExpirationDate", cursorExpirationDate)
+				.param("cursorCreatedAt", cursorCreatedAt)
+				.param("cursorId", cursorId.toString())
+				.with(operator()))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.content").isEmpty())
+			.andExpect(jsonPath("$.hasNext").value(false))
+			.andExpect(jsonPath("$.nextCursorExpirationDate").doesNotExist())
+			.andExpect(jsonPath("$.nextCursorCreatedAt").doesNotExist())
+			.andExpect(jsonPath("$.nextCursorId").doesNotExist());
 	}
 
 	@Test

@@ -3,11 +3,10 @@ package io.github.vitaa1.vencefacil.inventory;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Locale;
 
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -44,15 +43,19 @@ class StockEntryService {
 	}
 
 	@Transactional(readOnly = true)
-	StockEntryPageResponse listActive(int page, int size, LocalDate today) {
-		PageRequest pageRequest = PageRequest.of(page, size, Sort.by(
-				Sort.Order.asc("expirationDate"),
-				Sort.Order.asc("createdAt"),
-				Sort.Order.asc("id")));
-		Page<StockEntryResponse> result = stockEntryRepository
-			.findByAvailableQuantityGreaterThan(0, pageRequest)
-			.map(entry -> StockEntryResponse.from(entry, today));
-		return StockEntryPageResponse.from(result);
+	StockEntryPageResponse listActive(int size, LocalDate cursorExpirationDate, Instant cursorCreatedAt,
+			Long cursorId, LocalDate today) {
+		PageRequest pageRequest = PageRequest.of(0, size + 1);
+		List<StockEntry> entries = cursorExpirationDate == null
+				? stockEntryRepository.findFirstActiveSlice(pageRequest)
+				: stockEntryRepository.findActiveSliceAfter(
+						cursorExpirationDate, cursorCreatedAt, cursorId, pageRequest);
+		boolean hasNext = entries.size() > size;
+		List<StockEntryResponse> content = entries.stream()
+			.limit(size)
+			.map(entry -> StockEntryResponse.from(entry, today))
+			.toList();
+		return StockEntryPageResponse.from(content, size, hasNext);
 	}
 
 	@Transactional(readOnly = true)

@@ -1,8 +1,10 @@
 package io.github.vitaa1.vencefacil.inventory;
 
+import java.time.Instant;
+import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -13,7 +15,28 @@ import org.springframework.data.repository.query.Param;
 interface StockEntryRepository extends JpaRepository<StockEntry, Long> {
 
 	@EntityGraph(attributePaths = "product")
-	Page<StockEntry> findByAvailableQuantityGreaterThan(int quantity, Pageable pageable);
+	@Query("""
+			select entry from StockEntry entry
+			where entry.availableQuantity > 0
+			order by entry.expirationDate, entry.createdAt, entry.id
+			""")
+	List<StockEntry> findFirstActiveSlice(Pageable pageable);
+
+	@EntityGraph(attributePaths = "product")
+	@Query("""
+			select entry from StockEntry entry
+			where entry.availableQuantity > 0
+			  and (entry.expirationDate > :cursorExpirationDate
+			       or (entry.expirationDate = :cursorExpirationDate and entry.createdAt > :cursorCreatedAt)
+			       or (entry.expirationDate = :cursorExpirationDate
+			           and entry.createdAt = :cursorCreatedAt and entry.id > :cursorId))
+			order by entry.expirationDate, entry.createdAt, entry.id
+			""")
+	List<StockEntry> findActiveSliceAfter(
+			@Param("cursorExpirationDate") LocalDate cursorExpirationDate,
+			@Param("cursorCreatedAt") Instant cursorCreatedAt,
+			@Param("cursorId") long cursorId,
+			Pageable pageable);
 
 	@EntityGraph(attributePaths = "product")
 	@Query("select entry from StockEntry entry where entry.id = :entryId")
