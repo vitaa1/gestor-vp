@@ -2,7 +2,7 @@
 
 ## Contexto
 
-- O Vence Fácil é um monólito modular com backend Spring Boot e frontend
+- O gestorVP é um monólito modular com backend Spring Boot e frontend
   Angular.
 - Código e identificadores são escritos em inglês; interface e documentação,
   em pt-BR.

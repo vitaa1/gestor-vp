@@ -1,6 +1,6 @@
 # Roadmap do MVP
 
-Este roadmap ordena o trabalho restante do Vence Fácil após a entrega do
+Este roadmap ordena o trabalho restante do gestorVP após a entrega do
 primeiro fluxo vertical. Cada incremento deve usar branch isolada, Pull Request
 focado, validações automatizadas e as revisões delegadas definidas no
 `AGENTS.md`.
@@ -40,8 +40,8 @@ validação operacional confirmou:
   Railway somente depois do check;
 - healthcheck `200` com estado `UP`, login, os quatro registros sintéticos e um
   cadastro preservado após recarregar a aplicação;
-- schema na versão 3 e ausência de permissão do papel `vence_facil_runtime`
-  para consultar `flyway_schema_history`;
+- schema na versão 3 e ausência de permissão do papel de runtime então chamado
+  `vence_facil_runtime` para consultar `flyway_schema_history`;
 - vinte respostas `401` seguidas de `429` na 21ª autenticação inválida, mesmo
   com valores diferentes de `X-Real-IP` enviados pelo cliente;
 - entrada do serviço em repouso após a inatividade.

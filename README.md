@@ -1,8 +1,8 @@
-# Vence Fácil
+# gestorVP
 
-> Controle de validade sem complicação.
+> Gestor de Validade de Produtos · Controle de validade sem complicação.
 
-O **Vence Fácil** ajuda pequenos mercados, mercearias e comércios de bairro a
+O **gestorVP** ajuda pequenos mercados, mercearias e comércios de bairro a
 identificar produtos próximos do vencimento e registrar entradas e retiradas
 pelo celular.
 
@@ -16,7 +16,7 @@ Em pequenos estabelecimentos, a validade das mercadorias costuma ser
 controlada visualmente, em cadernos ou planilhas. Isso pode causar desperdício,
 prejuízo e produtos vencidos nas prateleiras.
 
-O Vence Fácil deve responder rapidamente:
+O gestorVP deve responder rapidamente:
 
 - O que já venceu?
 - O que vence nesta semana?
@@ -69,7 +69,7 @@ serão reavaliadas somente quando trouxerem benefício concreto ao produto.
 ## Estrutura do repositório
 
 ```text
-vence-facil/
+gestor-vp/
 ├── backend/        # API Spring Boot
 ├── frontend/       # Aplicação Angular
 ├── docs/           # Produto e decisões técnicas
@@ -83,10 +83,10 @@ vence-facil/
 consulta de detalhes e retirada de unidades publicados no ambiente de
 demonstração.
 
-A versão atual está disponível em
-[vence-facil-production.up.railway.app](https://vence-facil-production.up.railway.app/).
-Como o serviço usa o modo Serverless do Railway, o primeiro acesso após um
-período de inatividade pode levar alguns segundos.
+O endereço público definitivo será informado depois que a infraestrutura
+externa for renomeada e o novo domínio do Railway for validado. Como o serviço
+usa o modo Serverless, o primeiro acesso após um período de inatividade pode
+levar alguns segundos.
 
 ## Executar localmente
 
@@ -123,14 +123,19 @@ npm start
 Para personalizar o PostgreSQL executado pelo Docker Compose, copie
 `.env.example` para `.env`. O arquivo `.env` não deve ser versionado.
 
+A mudança do nome do projeto Compose cria o volume local
+`gestor-vp_postgres-data`. O volume usado antes da renomeação não é apagado,
+mas também não é montado automaticamente. Exporte os dados que desejar manter
+antes de subir a nova composição; os dados sintéticos podem ser recriados.
+
 O Spring Boot não carrega esse arquivo automaticamente. Antes de iniciar a API,
 defina `DB_URL`, `DB_USERNAME`, `DB_PASSWORD`, `SERVER_PORT`, `APP_USERNAME` e
 `APP_PASSWORD` no terminal que executará o Maven. Por exemplo, no PowerShell:
 
 ```powershell
-$env:DB_URL = "jdbc:postgresql://localhost:5432/vence_facil"
-$env:DB_USERNAME = "vence_facil"
-$env:DB_PASSWORD = "vence_facil_local"
+$env:DB_URL = "jdbc:postgresql://localhost:5432/gestor_vp"
+$env:DB_USERNAME = "gestor_vp"
+$env:DB_PASSWORD = "gestor_vp_local"
 $env:SERVER_PORT = "8080"
 $env:APP_USERNAME = "operador"
 $env:APP_PASSWORD = "troque-esta-senha-local"

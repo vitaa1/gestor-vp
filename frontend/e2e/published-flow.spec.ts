@@ -8,6 +8,8 @@ test('completes the inventory and history flow through the published application
 }, testInfo) => {
   await page.goto('/');
 
+  await expect(page).toHaveTitle('gestorVP');
+  await expect(page.getByText('gestorVP', { exact: true })).toBeVisible();
   await expect(page.getByText('Versão em desenvolvimento')).toBeVisible();
   await page.getByLabel('Usuário').fill('invalid-operator');
   await page.getByLabel('Senha', { exact: true }).fill('invalid-password');

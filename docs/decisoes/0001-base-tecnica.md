@@ -5,7 +5,7 @@
 
 ## Contexto
 
-O Vence Fácil precisa demonstrar uma aplicação fullstack profissional sem
+O gestorVP precisa demonstrar uma aplicação fullstack profissional sem
 adicionar complexidade que não ajude o pequeno comerciante. A primeira etapa
 deve produzir um ambiente reproduzível, testável e adequado para entregas
 incrementais.

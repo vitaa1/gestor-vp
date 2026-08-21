@@ -1,6 +1,6 @@
 # Como contribuir
 
-O Vence Fácil utiliza desenvolvimento baseado em branches e Pull Requests.
+O gestorVP utiliza desenvolvimento baseado em branches e Pull Requests.
 Alterações não devem ser desenvolvidas ou commitadas diretamente na `main`.
 
 ## Fluxo de trabalho

@@ -9,10 +9,10 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>io.github.vitaa1</groupId>
-	<artifactId>vence-facil-api</artifactId>
+	<artifactId>gestor-vp-api</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>vence-facil-api</name>
-	<description>API do Vence Facil</description>
+	<name>gestor-vp-api</name>
+	<description>API do gestorVP</description>
 	<url/>
 	<licenses>
 		<license/>

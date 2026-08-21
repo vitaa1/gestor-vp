@@ -1,12 +1,13 @@
-# Estoque do Vence Fácil
+# Estoque do gestorVP
 
-Este contexto descreve a linguagem usada para controlar produtos, validades e
-quantidades em um pequeno estabelecimento.
+O gestorVP — Gestor de Validade de Produtos — usa este contexto para descrever
+a linguagem de controle de produtos, validades e quantidades em um pequeno
+estabelecimento.
 
 ## Linguagem
 
 **Estabelecimento**:
-O pequeno comércio representado por uma implantação do Vence Fácil e ao qual
+O pequeno comércio representado por uma implantação do gestorVP e ao qual
 pertencem todos os dados de estoque dessa implantação.
 _Evitar_: Tenant, conta, organização
 

@@ -1,6 +1,6 @@
 # Backend
 
-API do Vence Fácil construída com Java 21, Spring Boot, PostgreSQL e Flyway.
+API do gestorVP construída com Java 21, Spring Boot, PostgreSQL e Flyway.
 
 ## Executar localmente
 
