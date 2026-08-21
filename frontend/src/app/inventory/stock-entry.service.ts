@@ -16,10 +16,20 @@ export class StockEntryService {
   private readonly authService = inject(AuthService);
   private readonly resourceUrl = '/api/v1/stock-entries';
 
-  list(page = 0, size = 50): Observable<StockEntryPage> {
+  list(
+    size = 50,
+    cursorExpirationDate?: string,
+    cursorCreatedAt?: string,
+    cursorId?: number,
+  ): Observable<StockEntryPage> {
     return this.http.get<StockEntryPage>(this.resourceUrl, {
       headers: this.authService.headers(),
-      params: { page, size },
+      params:
+        cursorExpirationDate === undefined ||
+        cursorCreatedAt === undefined ||
+        cursorId === undefined
+          ? { size }
+          : { size, cursorExpirationDate, cursorCreatedAt, cursorId },
     });
   }
 

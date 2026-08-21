@@ -19,10 +19,11 @@ export interface CreateStockEntry {
 
 export interface StockEntryPage {
   content: StockEntry[];
-  page: number;
   size: number;
-  totalElements: number;
-  totalPages: number;
+  hasNext: boolean;
+  nextCursorExpirationDate: string | null;
+  nextCursorCreatedAt: string | null;
+  nextCursorId: number | null;
 }
 
 export type WithdrawalReason = 'SOLD' | 'USED' | 'DONATED' | 'LOST' | 'EXPIRED';

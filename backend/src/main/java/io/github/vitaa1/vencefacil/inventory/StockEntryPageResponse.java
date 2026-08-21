@@ -2,21 +2,22 @@ package io.github.vitaa1.vencefacil.inventory;
 
 import java.util.List;
 
-import org.springframework.data.domain.Page;
-
 public record StockEntryPageResponse(
 		List<StockEntryResponse> content,
-		int page,
 		int size,
-		long totalElements,
-		int totalPages) {
+		boolean hasNext,
+		java.time.LocalDate nextCursorExpirationDate,
+		java.time.Instant nextCursorCreatedAt,
+		Long nextCursorId) {
 
-	static StockEntryPageResponse from(Page<StockEntryResponse> result) {
+	static StockEntryPageResponse from(List<StockEntryResponse> content, int size, boolean hasNext) {
+		StockEntryResponse cursorEntry = hasNext ? content.getLast() : null;
 		return new StockEntryPageResponse(
-				result.getContent(),
-				result.getNumber(),
-				result.getSize(),
-				result.getTotalElements(),
-				result.getTotalPages());
+				content,
+				size,
+				hasNext,
+				cursorEntry == null ? null : cursorEntry.expirationDate(),
+				cursorEntry == null ? null : cursorEntry.createdAt(),
+				cursorEntry == null ? null : cursorEntry.id());
 	}
 }

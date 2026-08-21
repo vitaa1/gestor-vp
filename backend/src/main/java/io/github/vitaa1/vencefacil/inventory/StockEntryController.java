@@ -1,5 +1,8 @@
 package io.github.vitaa1.vencefacil.inventory;
 
+import java.time.Instant;
+import java.time.LocalDate;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -11,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
@@ -41,10 +45,24 @@ class StockEntryController {
 
 	@GetMapping
 	StockEntryPageResponse listActive(
-			@RequestParam(defaultValue = "0") @Min(0) @Max(10_000) int page,
 			@RequestParam(defaultValue = "50") @Min(1) @Max(100) int size,
+			@RequestParam(required = false) LocalDate cursorExpirationDate,
+			@RequestParam(required = false) Instant cursorCreatedAt,
+			@RequestParam(required = false) @Min(1) Long cursorId,
 			@RequestHeader(name = BusinessDateProvider.USER_TIME_ZONE_HEADER, required = false) @Size(max = 100) String userTimeZone) {
-		return stockEntryService.listActive(page, size, businessDateProvider.currentDate(userTimeZone));
+		boolean hasAnyCursorValue = cursorExpirationDate != null || cursorCreatedAt != null || cursorId != null;
+		boolean hasCompleteCursor = cursorExpirationDate != null && cursorCreatedAt != null && cursorId != null;
+		if (hasAnyCursorValue && !hasCompleteCursor) {
+			throw new ResponseStatusException(
+					HttpStatus.BAD_REQUEST,
+					"Os três parâmetros do cursor devem ser informados juntos.");
+		}
+		return stockEntryService.listActive(
+				size,
+				cursorExpirationDate,
+				cursorCreatedAt,
+				cursorId,
+				businessDateProvider.currentDate(userTimeZone));
 	}
 
 	@GetMapping("/{entryId}")

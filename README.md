@@ -187,6 +187,9 @@ branches, commits e merge estão em [CONTRIBUTING.md](CONTRIBUTING.md).
 A versão publicada permite:
 
 - cadastrar uma entrada de produto e exibi-la na lista em ordem de validade;
+- carregar o estoque ativo por cursor, sem deslocar as entradas posteriores
+  quando o estoque muda entre os carregamentos; novas entradas anteriores ao
+  cursor aparecem após atualizar a lista;
 - abrir uma entrada para consultar produto, validade, situação e quantidades
   inicial e disponível;
 - retirar unidades pelos motivos **Vendi**, **Usei**, **Doei**, **Perdi** ou
