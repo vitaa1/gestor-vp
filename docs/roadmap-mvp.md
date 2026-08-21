@@ -82,12 +82,18 @@ da aprovação do CI.
 - [x] rejeitar integralmente retiradas superiores à quantidade disponível;
 - [x] atualizar o saldo atomicamente e registrar uma movimentação imutável.
 
-### 4. Histórico
+### 4. Histórico — concluído
 
-- listar uma movimentação por linha, com registros recentes primeiro;
-- mostrar produto, validade, tipo, quantidade, data/hora e motivo aplicável;
-- paginar a consulta;
-- permitir consultar entradas encerradas em modo somente leitura.
+O PR #13 entregou este incremento com paginação por cursor estável, migration
+Flyway V4 e testes automatizados de backend, frontend e do fluxo completo em
+desktop e celular. O merge `5743f1a` está na `main` publicada pelo Railway: o
+healthcheck respondeu `200` com TLS válido, a aplicação serviu o bundle Angular
+do incremento e a nova rota autenticada rejeitou acesso anônimo com `401`.
+
+- [x] listar uma movimentação por linha, com registros recentes primeiro;
+- [x] mostrar produto, validade, tipo, quantidade, data/hora e motivo aplicável;
+- [x] paginar a consulta;
+- [x] permitir consultar entradas encerradas em modo somente leitura.
 
 ### 5. Consulta de produtos
 
