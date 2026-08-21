@@ -31,6 +31,7 @@ class DatabasePrivilegesTests {
 	void runtimeCanUseApplicationObjectsButCannotChangeSchemaOrFlywayHistory() throws SQLException {
 		assertThat(hasTablePrivilege("products", "SELECT")).isTrue();
 		assertThat(hasTablePrivilege("stock_entries", "INSERT")).isTrue();
+		assertThat(hasTablePrivilege("stock_movements", "SELECT")).isTrue();
 		assertThat(hasSequencePrivilege("products_id_seq", "USAGE")).isTrue();
 		assertThat(hasSchemaPrivilege("CREATE")).isFalse();
 		assertThat(hasTablePrivilege("flyway_schema_history", "SELECT")).isFalse();

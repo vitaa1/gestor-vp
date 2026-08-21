@@ -78,6 +78,44 @@ main {
   gap: clamp(2.5rem, 7vw, 4rem);
 }
 
+.primary-navigation {
+  display: flex;
+  width: fit-content;
+  padding: 0.3rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.85rem;
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
+  gap: 0.25rem;
+}
+
+.primary-navigation button {
+  padding: 0.65rem 1rem;
+  border: 0;
+  border-radius: 0.6rem;
+  color: var(--color-muted);
+  background: transparent;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.primary-navigation button[aria-current='page'] {
+  color: #fff;
+  background: var(--color-primary);
+}
+
+@media (hover: hover) {
+  .primary-navigation button:not([aria-current='page']):hover {
+    color: var(--color-primary-strong);
+    background: #edf8f0;
+  }
+}
+
+.primary-navigation button:focus-visible {
+  outline: 3px solid rgb(40 117 72 / 30%);
+  outline-offset: 2px;
+}
+
 .action-message {
   margin: -1.5rem 0;
   padding: 0.85rem 1rem;

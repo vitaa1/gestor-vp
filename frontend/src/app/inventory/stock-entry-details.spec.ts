@@ -83,6 +83,19 @@ describe('StockEntryDetails', () => {
     expect(labels).not.toContain('Doei');
   });
 
+  it('keeps a closed entry available without withdrawal controls', () => {
+    const fixture = TestBed.createComponent(StockEntryDetails);
+    fixture.componentRef.setInput('entry', { ...activeEntry, availableQuantity: 0 });
+    fixture.detectChanges();
+    const element = fixture.nativeElement as HTMLElement;
+
+    expect(element.textContent).toContain(
+      'Esta entrada está encerrada e disponível somente para consulta.',
+    );
+    expect(element.querySelector('.withdrawal-form')).toBeNull();
+    expect(element.querySelector('[data-action="review"]')).toBeNull();
+  });
+
   it('opens as a modal dialog and emits close when requested', () => {
     const fixture = TestBed.createComponent(StockEntryDetails);
     fixture.componentRef.setInput('entry', activeEntry);

@@ -1,0 +1,106 @@
+<section aria-labelledby="history-title">
+  <div class="history-heading">
+    <div>
+      <p class="eyebrow">Mais recentes primeiro</p>
+      <h2 id="history-title">Histórico</h2>
+      <p>Acompanhe cada entrada e retirada registrada no estoque.</p>
+    </div>
+    @if (!loading() && !errorMessage()) {
+      <span class="count">
+        {{ movements().length }} {{ movements().length === 1 ? 'movimentação' : 'movimentações' }}
+      </span>
+    }
+  </div>
+
+  <div aria-live="polite">
+    @if (loading()) {
+      <div class="state-card">Carregando histórico…</div>
+    } @else {
+      @if (errorMessage()) {
+        <div class="state-card state-card--error">
+          <p>{{ errorMessage() }}</p>
+          <button type="button" (click)="retryRequested.emit()">Tentar novamente</button>
+        </div>
+      }
+
+      @if (movements().length === 0) {
+        @if (!errorMessage()) {
+          <div class="state-card">
+            <strong>Nenhuma movimentação registrada.</strong>
+            <p>As entradas e retiradas aparecerão aqui.</p>
+          </div>
+        }
+      } @else {
+        <div class="movement-list" [class.movement-list--with-alert]="errorMessage()">
+          @for (movement of movements(); track movement.id) {
+            <article class="movement-row">
+              <div class="movement-row__product">
+                <span
+                  class="movement-type"
+                  [class.movement-type--withdrawal]="movement.type === 'WITHDRAWAL'"
+                >
+                  {{ movement.typeLabel }}
+                </span>
+                <h3>{{ movement.productName }}</h3>
+                @if (movement.entryClosed) {
+                  <span class="closed-label">Entrada encerrada</span>
+                }
+              </div>
+
+              <dl class="movement-row__facts">
+                <div>
+                  <dt>Validade</dt>
+                  <dd>{{ formatDate(movement.expirationDate) }}</dd>
+                </div>
+                <div>
+                  <dt>Quantidade</dt>
+                  <dd>
+                    {{ movement.quantity }}
+                    {{ movement.quantity === 1 ? 'unidade' : 'unidades' }}
+                  </dd>
+                </div>
+                @if (movement.reasonLabel) {
+                  <div>
+                    <dt>Motivo</dt>
+                    <dd>{{ movement.reasonLabel }}</dd>
+                  </div>
+                }
+                <div>
+                  <dt>Data e hora</dt>
+                  <dd>
+                    <time [attr.datetime]="movement.createdAt">
+                      {{ formatDateTime(movement.createdAt) }}
+                    </time>
+                  </dd>
+                </div>
+              </dl>
+
+              <button
+                class="movement-row__details"
+                type="button"
+                [attr.aria-label]="
+                  (movement.entryClosed ? 'Consultar entrada encerrada de ' : 'Ver entrada de ') +
+                  movement.productName
+                "
+                (click)="detailsRequested.emit(movement.stockEntryId)"
+              >
+                {{ movement.entryClosed ? 'Consultar entrada encerrada' : 'Ver entrada' }}
+              </button>
+            </article>
+          }
+        </div>
+
+        @if (hasMore()) {
+          <button
+            class="load-more"
+            type="button"
+            [disabled]="loadingMore()"
+            (click)="loadMoreRequested.emit()"
+          >
+            {{ loadingMore() ? 'Carregando…' : 'Carregar mais movimentações' }}
+          </button>
+        }
+      }
+    }
+  </div>
+</section>

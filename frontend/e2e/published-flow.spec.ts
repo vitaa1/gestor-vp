@@ -3,7 +3,7 @@ import { expect, test } from '@playwright/test';
 const username = process.env['E2E_USERNAME'] ?? 'operador';
 const password = process.env['E2E_PASSWORD'] ?? 'troque-esta-senha-local';
 
-test('logs in and creates an entry through the published application', async ({
+test('completes the inventory and history flow through the published application', async ({
   page,
 }, testInfo) => {
   await page.goto('/');
@@ -21,14 +21,40 @@ test('logs in and creates an entry through the published application', async ({
     page.getByRole('heading', { name: 'O que vence primeiro aparece primeiro.' }),
   ).toBeVisible();
 
-  const productName = `Produto E2E ${testInfo.project.name}`;
+  const productName = `Produto E2E ${testInfo.project.name} tentativa ${testInfo.retry}`;
   await page.getByLabel('Nome do produto').fill(productName);
   await page.getByLabel('Quantidade').fill('3');
   await page.getByLabel('Data de validade').fill('2035-12-31');
   await page.getByRole('button', { name: 'Adicionar produto' }).click();
 
   await expect(page.getByText('Produto adicionado!')).toBeVisible();
-  await expect(page.locator('.entry-card').filter({ hasText: productName })).toBeVisible();
+  const entryCard = page.locator('.entry-card').filter({ hasText: productName });
+  await expect(entryCard).toBeVisible();
+
+  await entryCard.getByRole('button', { name: 'Ver detalhes' }).click();
+  await page.locator('#withdrawal-quantity').fill('3');
+  await page.locator('#withdrawal-reason').selectOption('USED');
+  await page.getByRole('button', { name: 'Revisar retirada' }).click();
+  await page.getByRole('button', { name: 'Confirmar retirada' }).click();
+  await expect(page.getByText(`${productName} saiu do estoque ativo.`)).toBeVisible();
+
+  await page.getByRole('button', { name: 'Histórico' }).click();
+  await expect(page.getByRole('heading', { name: 'Histórico' })).toBeVisible();
+  const productMovements = page.locator('.movement-row').filter({ hasText: productName });
+  await expect(productMovements).toHaveCount(2);
+  await expect(productMovements.first()).toContainText('Retirada');
+  await expect(productMovements.first()).toContainText('Usei');
+
+  await productMovements
+    .first()
+    .getByRole('button', { name: `Consultar entrada encerrada de ${productName}` })
+    .click();
+  const detailsDialog = page.getByRole('dialog');
+  await expect(
+    detailsDialog.getByText('Esta entrada está encerrada e disponível somente para consulta.'),
+  ).toBeVisible();
+  await expect(detailsDialog.getByRole('heading', { name: productName })).toBeVisible();
+  await expect(detailsDialog.getByRole('heading', { name: 'Retirar unidades' })).toHaveCount(0);
 
   const viewportMetrics = await page.evaluate(() => ({
     clientWidth: document.documentElement.clientWidth,
