@@ -27,7 +27,9 @@ A API expõe o primeiro fluxo funcional em `/api/v1/stock-entries`:
 - `POST /api/v1/stock-entries`: cadastra nome, quantidade e data de validade;
 - `GET /api/v1/stock-entries`: lista entradas com saldo disponível pela validade
   mais próxima, com paginação por cursor estável mesmo quando o estoque muda
-  entre os carregamentos.
+  entre os carregamentos. Os parâmetros opcionais `query` e `status` combinam
+  busca parcial normalizada com os filtros `EXPIRED`, `ATTENTION`, `WATCH` e
+  `OK`.
 
 Exemplo de cadastro:
 

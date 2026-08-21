@@ -26,7 +26,15 @@
         [attr.aria-current]="activeView() === 'stock' ? 'page' : null"
         (click)="showStock()"
       >
-        Estoque
+        Início
+      </button>
+      <button
+        data-view="products"
+        type="button"
+        [attr.aria-current]="activeView() === 'products' ? 'page' : null"
+        (click)="showProducts()"
+      >
+        Produtos
       </button>
       <button
         data-view="history"
@@ -43,6 +51,10 @@
         <p class="eyebrow">Seu estoque em ordem</p>
         <h1 id="page-title">O que vence primeiro aparece primeiro.</h1>
         <p>Cadastre uma mercadoria e veja rapidamente o que precisa da sua atenção.</p>
+      } @else if (activeView() === 'products') {
+        <p class="eyebrow">Encontre sem complicação</p>
+        <h1 id="page-title">Consulte seus produtos.</h1>
+        <p>Busque pelo nome e filtre pela situação da validade.</p>
       } @else {
         <p class="eyebrow">Tudo registrado</p>
         <h1 id="page-title">Entenda o que aconteceu no estoque.</h1>
@@ -68,6 +80,49 @@
         [errorMessage]="errorMessage()"
         (retryRequested)="loadEntries()"
         (loadMoreRequested)="loadMore()"
+        (detailsRequested)="openDetails($event)"
+      />
+    } @else if (activeView() === 'products') {
+      <form
+        class="product-search"
+        aria-label="Buscar produtos"
+        (submit)="submitProductSearch($event)"
+      >
+        <label class="product-search__name">
+          <span>Nome do produto</span>
+          <input
+            type="search"
+            maxlength="120"
+            placeholder="Ex.: pão de forma"
+            [value]="productQuery()"
+            (input)="updateProductQuery($event)"
+          />
+        </label>
+        <label>
+          <span>Situação</span>
+          <select [value]="productStatus()" (change)="updateProductStatus($event)">
+            <option value="">Todos</option>
+            <option value="EXPIRED">Vencido</option>
+            <option value="ATTENTION">Atenção</option>
+            <option value="WATCH">Fique de olho</option>
+            <option value="OK">Tudo certo</option>
+          </select>
+        </label>
+        <button type="submit" [disabled]="productLoading()">Buscar</button>
+      </form>
+
+      <app-stock-entry-list
+        headingEyebrow="Resultados por validade"
+        headingTitle="Produtos encontrados"
+        emptyTitle="Nenhum produto encontrado."
+        emptyDescription="Tente outro nome ou escolha uma situação diferente."
+        [entries]="productEntries()"
+        [loading]="productLoading()"
+        [loadingMore]="productLoadingMore()"
+        [hasMore]="productHasMore()"
+        [errorMessage]="productError()"
+        (retryRequested)="searchProducts()"
+        (loadMoreRequested)="loadMoreProducts()"
         (detailsRequested)="openDetails($event)"
       />
     } @else {

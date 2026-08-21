@@ -46,6 +46,8 @@ class StockEntryController {
 	@GetMapping
 	StockEntryPageResponse listActive(
 			@RequestParam(defaultValue = "50") @Min(1) @Max(100) int size,
+			@RequestParam(required = false) @Size(max = 120) String query,
+			@RequestParam(required = false) ExpirationStatus status,
 			@RequestParam(required = false) LocalDate cursorExpirationDate,
 			@RequestParam(required = false) Instant cursorCreatedAt,
 			@RequestParam(required = false) @Min(1) Long cursorId,
@@ -59,6 +61,8 @@ class StockEntryController {
 		}
 		return stockEntryService.listActive(
 				size,
+				query,
+				status,
 				cursorExpirationDate,
 				cursorCreatedAt,
 				cursorId,

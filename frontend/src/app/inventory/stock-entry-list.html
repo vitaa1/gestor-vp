@@ -1,8 +1,8 @@
 <section aria-labelledby="stock-title">
   <div class="list-heading">
     <div>
-      <p class="eyebrow">Por ordem de validade</p>
-      <h2 id="stock-title">Produtos no estoque</h2>
+      <p class="eyebrow">{{ headingEyebrow() }}</p>
+      <h2 id="stock-title">{{ headingTitle() }}</h2>
     </div>
     @if (!loading() && !errorMessage()) {
       <span class="count"
@@ -25,8 +25,8 @@
       @if (entries().length === 0) {
         @if (!errorMessage()) {
           <div class="state-card">
-            <strong>Seu estoque ainda está vazio.</strong>
-            <p>Adicione o primeiro produto usando o formulário acima.</p>
+            <strong>{{ emptyTitle() }}</strong>
+            <p>{{ emptyDescription() }}</p>
           </div>
         }
       } @else {

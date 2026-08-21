@@ -4,7 +4,6 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Locale;
 
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -28,13 +27,16 @@ class StockEntryService {
 
 	@Transactional
 	StockEntryResponse create(CreateStockEntryRequest request, LocalDate today) {
-		String productName = normalizeWhitespace(request.productName());
-		String normalizedName = productName.toLowerCase(Locale.ROOT);
+		String productName = ProductNameNormalizer.displayName(request.productName());
+		String normalizedName = ProductNameNormalizer.legacyNormalizedName(productName);
+		String searchName = ProductNameNormalizer.searchName(productName);
 		Instant now = clock.instant();
 
-		productRepository.insertIfAbsent(productName, normalizedName, now);
-		Product product = productRepository.findByNormalizedName(normalizedName)
-			.orElseThrow(() -> new IllegalStateException("Product was not available after creation"));
+		Product product = productRepository.findFirstBySearchNameOrderById(searchName).orElseGet(() -> {
+			productRepository.insertIfAbsent(productName, normalizedName, now);
+			return productRepository.findFirstBySearchNameOrderById(searchName)
+					.orElseThrow(() -> new IllegalStateException("Product was not available after creation"));
+		});
 		StockEntry entry = stockEntryRepository.save(
 				new StockEntry(product, request.quantity(), request.expirationDate(), now));
 		stockMovementRepository.save(new StockMovement(entry, MovementType.ENTRY, request.quantity(), now));
@@ -43,12 +45,18 @@ class StockEntryService {
 	}
 
 	@Transactional(readOnly = true)
-	StockEntryPageResponse listActive(int size, LocalDate cursorExpirationDate, Instant cursorCreatedAt,
-			Long cursorId, LocalDate today) {
+	StockEntryPageResponse listActive(int size, String query, ExpirationStatus status,
+			LocalDate cursorExpirationDate, Instant cursorCreatedAt, Long cursorId, LocalDate today) {
 		PageRequest pageRequest = PageRequest.of(0, size + 1);
+		ExpirationDateRange range = ExpirationDateRange.from(status, today);
+		String normalizedQuery = query == null || query.isBlank()
+				? ""
+				: ProductNameNormalizer.searchName(query);
 		List<StockEntry> entries = cursorExpirationDate == null
-				? stockEntryRepository.findFirstActiveSlice(pageRequest)
+				? stockEntryRepository.findFirstActiveSlice(
+						normalizedQuery, range.minimum(), range.maximum(), pageRequest)
 				: stockEntryRepository.findActiveSliceAfter(
+						normalizedQuery, range.minimum(), range.maximum(),
 						cursorExpirationDate, cursorCreatedAt, cursorId, pageRequest);
 		boolean hasNext = entries.size() > size;
 		List<StockEntryResponse> content = entries.stream()
@@ -56,6 +64,23 @@ class StockEntryService {
 			.map(entry -> StockEntryResponse.from(entry, today))
 			.toList();
 		return StockEntryPageResponse.from(content, size, hasNext);
+	}
+
+	private record ExpirationDateRange(LocalDate minimum, LocalDate maximum) {
+		private static final LocalDate EARLIEST_SUPPORTED_DATE = LocalDate.of(1, 1, 1);
+		private static final LocalDate LATEST_SUPPORTED_DATE = LocalDate.of(9999, 12, 31);
+
+		static ExpirationDateRange from(ExpirationStatus status, LocalDate today) {
+			if (status == null) {
+				return new ExpirationDateRange(EARLIEST_SUPPORTED_DATE, LATEST_SUPPORTED_DATE);
+			}
+			return switch (status) {
+				case EXPIRED -> new ExpirationDateRange(EARLIEST_SUPPORTED_DATE, today.minusDays(1));
+				case ATTENTION -> new ExpirationDateRange(today, today.plusDays(7));
+				case WATCH -> new ExpirationDateRange(today.plusDays(8), today.plusDays(30));
+				case OK -> new ExpirationDateRange(today.plusDays(31), LATEST_SUPPORTED_DATE);
+			};
+		}
 	}
 
 	@Transactional(readOnly = true)
@@ -85,7 +110,4 @@ class StockEntryService {
 			.orElseThrow(() -> new StockEntryNotFoundException(entryId));
 	}
 
-	private String normalizeWhitespace(String value) {
-		return value.trim().replaceAll("\\s+", " ");
-	}
 }
