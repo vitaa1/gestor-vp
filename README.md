@@ -191,9 +191,13 @@ A versão publicada permite:
   inicial e disponível;
 - retirar unidades pelos motivos **Vendi**, **Usei**, **Doei**, **Perdi** ou
   **Venceu**, depois de revisar e confirmar a operação;
-- encerrar uma entrada quando a quantidade disponível chega a zero.
+- encerrar uma entrada quando a quantidade disponível chega a zero;
+- consultar entradas e retiradas no **Histórico**, com os registros recentes
+  primeiro e carregamento paginado;
+- abrir pelo Histórico uma entrada encerrada em modo somente leitura.
 
 Retiradas acima do saldo são rejeitadas integralmente. Para entradas vencidas,
 somente os motivos **Perdi** e **Venceu** ficam disponíveis. Cada retirada
 atualiza o saldo de forma atômica e preserva uma movimentação imutável para o
-histórico.
+histórico. Cada linha do Histórico identifica produto, validade, tipo,
+quantidade, data e hora e, nas retiradas, o motivo aplicável.
