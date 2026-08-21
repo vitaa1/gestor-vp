@@ -68,15 +68,19 @@ reativa o serviço.
   cadastro e listagem;
 - publicar automaticamente a `main` somente após o CI aprovado.
 
-### 3. Detalhes e retirada de unidades
+### 3. Detalhes e retirada de unidades — concluído
 
-- abrir uma entrada pela identificação do produto e da validade;
-- mostrar dados completos, quantidades inicial e disponível e situação;
-- confirmar ou cancelar a retirada antes de persistir;
-- aceitar os motivos **Vendi**, **Usei**, **Doei**, **Perdi** e **Venceu**;
-- impedir **Vendi** e **Doei** em entradas vencidas;
-- rejeitar integralmente retiradas superiores à quantidade disponível;
-- atualizar o saldo atomicamente e registrar uma movimentação imutável.
+O PR #8 entregou este incremento com testes automatizados de backend e
+frontend. O merge `a38da33` faz parte da `main` publicada pelo Railway depois
+da aprovação do CI.
+
+- [x] abrir uma entrada pela identificação do produto e da validade;
+- [x] mostrar dados completos, quantidades inicial e disponível e situação;
+- [x] confirmar ou cancelar a retirada antes de persistir;
+- [x] aceitar os motivos **Vendi**, **Usei**, **Doei**, **Perdi** e **Venceu**;
+- [x] permitir somente **Perdi** e **Venceu** em entradas vencidas;
+- [x] rejeitar integralmente retiradas superiores à quantidade disponível;
+- [x] atualizar o saldo atomicamente e registrar uma movimentação imutável.
 
 ### 4. Histórico
 
