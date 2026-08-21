@@ -79,8 +79,9 @@ vence-facil/
 
 ## Status
 
-🚧 Em desenvolvimento — base técnica executável, primeiro fluxo funcional e
-ambiente de demonstração publicados.
+🚧 Em desenvolvimento — base técnica executável, cadastro de entradas,
+consulta de detalhes e retirada de unidades publicados no ambiente de
+demonstração.
 
 A versão atual está disponível em
 [vence-facil-production.up.railway.app](https://vence-facil-production.up.railway.app/).
@@ -181,8 +182,18 @@ Toda alteração é desenvolvida em uma branch isolada e integrada à `main` por
 Pull Request depois da revisão e da aprovação do pipeline. As convenções de
 branches, commits e merge estão em [CONTRIBUTING.md](CONTRIBUTING.md).
 
-## Primeiro fluxo funcional
+## Fluxos funcionais disponíveis
 
-O fluxo vertical disponível é:
+A versão publicada permite:
 
-> Cadastrar uma entrada de produto e exibi-la na lista em ordem de validade.
+- cadastrar uma entrada de produto e exibi-la na lista em ordem de validade;
+- abrir uma entrada para consultar produto, validade, situação e quantidades
+  inicial e disponível;
+- retirar unidades pelos motivos **Vendi**, **Usei**, **Doei**, **Perdi** ou
+  **Venceu**, depois de revisar e confirmar a operação;
+- encerrar uma entrada quando a quantidade disponível chega a zero.
+
+Retiradas acima do saldo são rejeitadas integralmente. Para entradas vencidas,
+somente os motivos **Perdi** e **Venceu** ficam disponíveis. Cada retirada
+atualiza o saldo de forma atômica e preserva uma movimentação imutável para o
+histórico.
