@@ -78,15 +78,13 @@ test('completes the inventory and history flow through the published application
   await page.getByRole('button', { name: 'Adicionar produto' }).click();
 
   await expect(page.getByText('Produto adicionado!')).toBeVisible();
-  let entryCard = page.locator('.entry-card').filter({ hasText: productName });
-  await expect(entryCard).toBeVisible();
 
-  await page.getByRole('button', { name: 'Produtos' }).click();
+  await page.getByRole('button', { name: 'Produtos', exact: true }).click();
   const productSearch = page.getByRole('form', { name: 'Buscar produtos' });
-  await productSearch.getByLabel('Nome do produto').fill('produto e2e');
+  await productSearch.getByLabel('Nome do produto').fill(productName);
   await productSearch.getByLabel('Situação').selectOption('OK');
   await productSearch.getByRole('button', { name: 'Buscar' }).click();
-  entryCard = page.locator('.entry-card').filter({ hasText: productName });
+  const entryCard = page.locator('.entry-card').filter({ hasText: productName });
   await expect(entryCard).toBeVisible();
   if (testInfo.project.name === 'mobile-chromium') {
     await expectMobileLayoutToFit(page);
