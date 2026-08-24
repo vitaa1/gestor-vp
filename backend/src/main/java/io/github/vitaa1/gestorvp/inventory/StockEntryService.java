@@ -98,7 +98,7 @@ class StockEntryService {
 		ExpirationDateRange range = ExpirationDateRange.from(status, today);
 		String normalizedQuery = query == null || query.isBlank()
 				? ""
-				: ProductNameNormalizer.searchName(query);
+				: escapeLikePattern(ProductNameNormalizer.searchName(query));
 		List<StockEntry> entries = cursorExpirationDate == null
 				? stockEntryRepository.findFirstActiveSlice(
 						normalizedQuery, range.minimum(), range.maximum(), pageRequest)
@@ -111,6 +111,10 @@ class StockEntryService {
 			.map(entry -> StockEntryResponse.from(entry, today))
 			.toList();
 		return StockEntryPageResponse.from(content, size, hasNext);
+	}
+
+	private String escapeLikePattern(String value) {
+		return value.replace("!", "!!").replace("%", "!%").replace("_", "!_");
 	}
 
 	private record ExpirationDateRange(LocalDate minimum, LocalDate maximum) {

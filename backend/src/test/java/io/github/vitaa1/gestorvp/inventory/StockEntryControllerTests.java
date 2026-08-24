@@ -407,6 +407,35 @@ class StockEntryControllerTests {
 	}
 
 	@Test
+	void treatsProductSearchWildcardsAsLiteralCharacters() throws Exception {
+		createEntry("Produto 100%", 1, "2028-01-01").andExpect(status().isCreated());
+		createEntry("Produto_linha", 1, "2028-01-02").andExpect(status().isCreated());
+		createEntry("Produto\\\\barra", 1, "2028-01-03").andExpect(status().isCreated());
+		createEntry("Produto comum", 1, "2028-01-04").andExpect(status().isCreated());
+
+		mockMvc.perform(get("/api/v1/stock-entries")
+				.param("query", "%")
+				.with(operator()))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.content", hasSize(1)))
+			.andExpect(jsonPath("$.content[0].productName").value("Produto 100%"));
+
+		mockMvc.perform(get("/api/v1/stock-entries")
+				.param("query", "_")
+				.with(operator()))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.content", hasSize(1)))
+			.andExpect(jsonPath("$.content[0].productName").value("Produto_linha"));
+
+		mockMvc.perform(get("/api/v1/stock-entries")
+				.param("query", "\\")
+				.with(operator()))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.content", hasSize(1)))
+			.andExpect(jsonPath("$.content[0].productName").value("Produto\\barra"));
+	}
+
+	@Test
 	void combinesProductNameSearchWithExpirationStatusFilter() throws Exception {
 		createEntry("Leite vencido", 1, "2026-08-21").andExpect(status().isCreated());
 		createEntry("Leite atenção", 1, "2026-08-29").andExpect(status().isCreated());

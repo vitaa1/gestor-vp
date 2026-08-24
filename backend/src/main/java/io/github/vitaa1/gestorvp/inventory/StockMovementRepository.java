@@ -21,8 +21,7 @@ interface StockMovementRepository extends JpaRepository<StockMovement, Long> {
 	@EntityGraph(attributePaths = "stockEntry.product")
 	@Query("""
 			select movement from StockMovement movement
-			where movement.createdAt < :cursorCreatedAt
-			   or (movement.createdAt = :cursorCreatedAt and movement.id < :cursorId)
+			where (movement.createdAt, movement.id) < (:cursorCreatedAt, :cursorId)
 			order by movement.createdAt desc, movement.id desc
 			""")
 	List<StockMovement> findSliceBefore(
