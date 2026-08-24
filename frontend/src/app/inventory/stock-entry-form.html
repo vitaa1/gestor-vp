@@ -166,7 +166,10 @@
 
   <div class="feedback" aria-live="polite">
     @if (successMessage()) {
-      <p class="feedback__success">{{ successMessage() }}</p>
+      <p class="feedback__success">
+        <span class="feedback__success-icon" aria-hidden="true">✓</span>
+        <span>{{ successMessage() }}</span>
+      </p>
     }
     @if (errorMessage()) {
       <p class="feedback__error">{{ errorMessage() }}</p>

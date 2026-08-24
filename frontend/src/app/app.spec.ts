@@ -1,7 +1,9 @@
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
+import { provideRouter, Router } from '@angular/router';
 import { of, Subject, throwError } from 'rxjs';
 import { App } from './app';
+import { routes } from './app.routes';
 import { AuthService } from './auth/auth.service';
 import { StockMovement, StockMovementPage } from './history/stock-movement.model';
 import { StockMovementService } from './history/stock-movement.service';
@@ -114,6 +116,7 @@ describe('App', () => {
     await TestBed.configureTestingModule({
       imports: [App],
       providers: [
+        provideRouter(routes),
         { provide: StockEntryService, useClass: StockEntryServiceStub },
         { provide: StockMovementService, useClass: StockMovementServiceStub },
         { provide: AuthService, useClass: AuthServiceStub },
@@ -137,17 +140,34 @@ describe('App', () => {
     expect(brand?.querySelector('strong')?.textContent).toBe('gestorVP');
   });
 
-  it('should show the inventory ordered by expiration', async () => {
+  it('should show a five-item expiration summary with access to all products', async () => {
+    const service = TestBed.inject(StockEntryService);
+    const list = vi.spyOn(service, 'list');
+    const search = vi.spyOn(service, 'search');
     const fixture = TestBed.createComponent(App);
     fixture.componentInstance.loadEntries();
     fixture.detectChanges();
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.querySelector('h1')?.textContent).toContain('O que vence primeiro');
+    expect(compiled.textContent).toContain('Produtos que vencem primeiro');
+    expect(compiled.textContent).toContain('Mostrando até 5 produtos');
     expect(compiled.textContent).toContain('Leite Integral');
     expect(compiled.textContent).toContain('Atenção');
+    expect(list).toHaveBeenCalledWith(5);
+    expect(compiled.querySelector('.stock-summary .load-more')).toBeNull();
+
+    const viewAllButton = compiled.querySelector(
+      '.stock-summary__footer button',
+    ) as HTMLButtonElement;
+    viewAllButton.click();
+    await fixture.whenStable();
+
+    expect(fixture.componentInstance.activeView()).toBe('products');
+    expect(TestBed.inject(Router).url).toBe('/produtos');
+    expect(search).toHaveBeenCalledWith('', '');
   });
 
-  it('should open the history from the primary navigation and load recent movements', () => {
+  it('should open the history from the primary navigation and update the URL', async () => {
     const fixture = TestBed.createComponent(App);
     fixture.detectChanges();
     const historyButton = (fixture.nativeElement as HTMLElement).querySelector(
@@ -155,15 +175,17 @@ describe('App', () => {
     ) as HTMLButtonElement;
 
     historyButton.click();
+    await fixture.whenStable();
     fixture.detectChanges();
 
     expect(fixture.componentInstance.activeView()).toBe('history');
+    expect(TestBed.inject(Router).url).toBe('/historico');
     expect((fixture.nativeElement as HTMLElement).textContent).toContain('Histórico');
     expect((fixture.nativeElement as HTMLElement).textContent).toContain('Leite Integral');
     expect((fixture.nativeElement as HTMLElement).textContent).toContain('Vendi');
   });
 
-  it('should search products by name and expiration status from the primary navigation', () => {
+  it('should search products by name and expiration status from the primary navigation', async () => {
     const service = TestBed.inject(StockEntryService);
     const search = vi.spyOn(service, 'search');
     const fixture = TestBed.createComponent(App);
@@ -173,6 +195,7 @@ describe('App', () => {
       '[data-view="products"]',
     ) as HTMLButtonElement;
     productsButton.click();
+    await fixture.whenStable();
     fixture.detectChanges();
 
     const queryInput = fixture.nativeElement.querySelector(
@@ -188,8 +211,21 @@ describe('App', () => {
     fixture.detectChanges();
 
     expect(fixture.componentInstance.activeView()).toBe('products');
+    expect(TestBed.inject(Router).url).toBe('/produtos');
     expect(search).toHaveBeenLastCalledWith(' pão ', 'WATCH');
     expect((fixture.nativeElement as HTMLElement).textContent).toContain('Leite Integral');
+  });
+
+  it('should restore the visible page from a direct URL', async () => {
+    const router = TestBed.inject(Router);
+    const fixture = TestBed.createComponent(App);
+
+    await router.navigateByUrl('/historico');
+    fixture.detectChanges();
+
+    expect(fixture.componentInstance.activeView()).toBe('history');
+    expect(fixture.nativeElement.textContent).toContain('Histórico');
+    expect(fixture.nativeElement.textContent).toContain('Leite Integral');
   });
 
   it('should show a friendly message when a product search has no results', () => {
@@ -432,12 +468,12 @@ describe('App', () => {
 
   it('should reconcile the first page when a withdrawal closes an entry', () => {
     const service = TestBed.inject(StockEntryService);
-    const firstPage = Array.from({ length: 50 }, (_, index) => ({
+    const firstPage = Array.from({ length: 5 }, (_, index) => ({
       ...entries[0],
       id: index + 1,
       productName: `Produto ${index + 1}`,
     }));
-    const shiftedEntry = { ...entries[0], id: 51, productName: 'Produto 51' };
+    const shiftedEntry = { ...entries[0], id: 6, productName: 'Produto 6' };
     vi.spyOn(service, 'list')
       .mockReturnValueOnce(of(stockPage(firstPage, true)))
       .mockReturnValueOnce(of(stockPage([...firstPage.slice(1), shiftedEntry])));
@@ -455,8 +491,8 @@ describe('App', () => {
 
     component.withdrawSelected({ quantity: 12, reason: 'SOLD' });
 
-    expect(component.entries()).toHaveLength(50);
-    expect(component.entries().map((entry) => entry.id)).toContain(51);
+    expect(component.entries()).toHaveLength(5);
+    expect(component.entries().map((entry) => entry.id)).toContain(6);
     expect(component.hasMore()).toBe(false);
     expect(component.actionMessage()).toContain('saiu do estoque ativo');
   });
