@@ -18,7 +18,7 @@ interface StockEntryRepository extends JpaRepository<StockEntry, Long> {
 	@Query("""
 			select entry from StockEntry entry
 			where entry.availableQuantity > 0
-			  and locate(:normalizedQuery, entry.product.searchName) > 0
+			  and entry.product.searchName like concat('%', :normalizedQuery, '%') escape '!'
 			  and entry.expirationDate >= :minimumExpirationDate
 			  and entry.expirationDate <= :maximumExpirationDate
 			order by entry.expirationDate, entry.createdAt, entry.id
@@ -33,7 +33,7 @@ interface StockEntryRepository extends JpaRepository<StockEntry, Long> {
 	@Query("""
 			select entry from StockEntry entry
 			where entry.availableQuantity > 0
-			  and locate(:normalizedQuery, entry.product.searchName) > 0
+			  and entry.product.searchName like concat('%', :normalizedQuery, '%') escape '!'
 			  and entry.expirationDate >= :minimumExpirationDate
 			  and entry.expirationDate <= :maximumExpirationDate
 			  and (entry.expirationDate > :cursorExpirationDate
