@@ -79,9 +79,11 @@ Ela apresenta:
 - produtos que vencem nos próximos 7 dias;
 - produtos que vencem nos próximos 30 dias;
 - produtos sem risco próximo;
-- resumo dos itens que exigem atenção.
+- resumo de até cinco itens que exigem atenção;
+- acesso à consulta completa de produtos.
 
-Os produtos mais urgentes aparecem primeiro.
+Os cinco produtos mais urgentes aparecem primeiro. A opção **Produtos** mantém
+a consulta completa, com busca, filtros e paginação.
 
 ### Adicionar produto
 
@@ -173,6 +175,8 @@ Critérios de aceitação:
 
 - vencidos aparecem antes dos demais;
 - itens próximos da validade aparecem em ordem de urgência;
+- a página inicial mostra no máximo cinco entradas;
+- um atalho permite abrir a consulta completa de produtos;
 - cada item mostra nome, quantidade, data e situação;
 - a situação não depende apenas de cor.
 
@@ -186,7 +190,7 @@ Critérios de aceitação:
 - nome, quantidade e validade são obrigatórios;
 - a quantidade deve ser maior que zero;
 - a data deve ser válida;
-- o sistema confirma a inclusão;
+- o sistema confirma a inclusão com texto e ícone de sucesso;
 - detalhes adicionais são opcionais.
 
 ### HU03 — Buscar um produto
@@ -238,8 +242,10 @@ Critérios de aceitação:
 
 A navegação principal possui no máximo três opções visíveis: **Início**,
 **Produtos** e **Histórico**. O botão **Adicionar produto** permanece em
-destaque. A tela inicial apresenta contagens de entradas e os quatro grupos de
-urgência; no celular, **Tudo certo** pode começar recolhido.
+destaque. Cada seção possui uma URL própria: `/` para **Início**, `/produtos`
+para **Produtos** e `/historico` para **Histórico**. A URL acompanha a tela
+ativa para permitir atualização, compartilhamento do endereço e uso dos
+controles de voltar e avançar do navegador.
 
 ## 9. Fora do MVP
 

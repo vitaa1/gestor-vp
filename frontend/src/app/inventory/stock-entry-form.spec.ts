@@ -165,6 +165,13 @@ describe('StockEntryForm', () => {
     });
     expect(emitted).toEqual([createdEntry]);
     expect(component.successMessage()).toBe('Produto adicionado!');
+
+    fixture.detectChanges();
+    const success = (fixture.nativeElement as HTMLElement).querySelector('.feedback__success');
+    const icon = success?.querySelector('.feedback__success-icon');
+    expect(success?.textContent).toContain('Produto adicionado!');
+    expect(icon?.textContent).toBe('✓');
+    expect(icon?.getAttribute('aria-hidden')).toBe('true');
   });
 
   it('starts with optional fields collapsed and reveals the invalid barcode', () => {

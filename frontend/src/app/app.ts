@@ -1,5 +1,8 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, inject, signal, viewChild } from '@angular/core';
+import { Component, DestroyRef, inject, signal, viewChild } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { NavigationEnd, Router, RouterLink, RouterOutlet } from '@angular/router';
+import { filter } from 'rxjs';
 import { AuthService } from './auth/auth.service';
 import { Login } from './auth/login';
 import { StockMovement } from './history/stock-movement.model';
@@ -19,13 +22,24 @@ import { StockEntryService } from './inventory/stock-entry.service';
 
 @Component({
   selector: 'app-root',
-  imports: [Login, StockEntryForm, StockEntryList, StockEntryDetails, StockMovementList],
+  imports: [
+    Login,
+    RouterLink,
+    RouterOutlet,
+    StockEntryForm,
+    StockEntryList,
+    StockEntryDetails,
+    StockMovementList,
+  ],
   templateUrl: './app.html',
   styleUrl: './app.scss',
 })
 export class App {
+  private static readonly HOME_SUMMARY_SIZE = 5;
   private readonly stockEntryService = inject(StockEntryService);
   private readonly stockMovementService = inject(StockMovementService);
+  private readonly router = inject(Router);
+  private readonly destroyRef = inject(DestroyRef);
   readonly authService = inject(AuthService);
   private loadVersion = 0;
   private inventoryLoaded = false;
@@ -70,18 +84,32 @@ export class App {
   readonly movementHasMore = signal(false);
   readonly movementError = signal('');
 
+  constructor() {
+    this.router.events
+      .pipe(
+        filter((event): event is NavigationEnd => event instanceof NavigationEnd),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe((event) => this.activateRoute(event.urlAfterRedirects));
+  }
+
   showStock(): void {
-    this.activeView.set('stock');
+    this.activateView('stock');
+    void this.router.navigateByUrl('/');
   }
 
   showProducts(): void {
-    this.activeView.set('products');
-    this.searchProducts();
+    this.activateView('products', true);
+    void this.router.navigateByUrl('/produtos');
   }
 
   showHistory(): void {
-    this.activeView.set('history');
-    this.loadMovements();
+    this.activateView('history', true);
+    void this.router.navigateByUrl('/historico');
+  }
+
+  loadCurrentView(): void {
+    this.activateView(this.activeView(), true);
   }
 
   updateProductQuery(event: Event): void {
@@ -265,7 +293,7 @@ export class App {
     this.loading.set(true);
     this.loadingMore.set(false);
     this.errorMessage.set('');
-    this.stockEntryService.list().subscribe({
+    this.stockEntryService.list(App.HOME_SUMMARY_SIZE).subscribe({
       next: (result) => {
         if (requestVersion !== this.loadVersion) {
           return;
@@ -275,7 +303,7 @@ export class App {
           this.sortEntries([
             ...result.content,
             ...entriesToPreserve.filter((entry) => !pageIds.has(entry.id)),
-          ]),
+          ]).slice(0, App.HOME_SUMMARY_SIZE),
         );
         this.inventoryLoaded = true;
         this.setEntryCursor(result);
@@ -343,7 +371,9 @@ export class App {
     this.loading.set(false);
     this.loadingMore.set(false);
     this.errorMessage.set('');
-    this.entries.update((entries) => this.sortEntries([...entries, entry]));
+    this.entries.update((entries) =>
+      this.sortEntries([...entries, entry]).slice(0, App.HOME_SUMMARY_SIZE),
+    );
     this.resetMovements();
 
     if (needsAuthoritativeReload) {
@@ -470,6 +500,7 @@ export class App {
     this.entryCursorCreatedAt = null;
     this.entryCursorId = null;
     this.activeView.set('stock');
+    void this.router.navigateByUrl('/');
     this.resetProducts();
     this.resetMovements();
     this.closeDetails();
@@ -501,6 +532,29 @@ export class App {
     this.productCursorId = null;
     this.appliedProductQuery = '';
     this.appliedProductStatus = '';
+  }
+
+  private activateRoute(url: string): void {
+    const path = url.split(/[?#]/, 1)[0].replace(/^\/+|\/+$/g, '');
+    const view = path === 'produtos' ? 'products' : path === 'historico' ? 'history' : 'stock';
+    if (view !== this.activeView()) {
+      this.activateView(view);
+    }
+  }
+
+  private activateView(view: 'stock' | 'products' | 'history', forceLoad = false): void {
+    const changed = view !== this.activeView();
+    this.activeView.set(view);
+    if (!this.authService.authenticated() || (!changed && !forceLoad)) {
+      return;
+    }
+    if (view === 'products') {
+      this.searchProducts();
+    } else if (view === 'history') {
+      this.loadMovements();
+    } else if (!this.inventoryLoaded) {
+      this.loadEntries();
+    }
   }
 
   private setEntryCursor(result: StockEntryPage): void {

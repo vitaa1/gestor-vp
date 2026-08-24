@@ -3,11 +3,11 @@
 </div>
 
 @if (!authService.authenticated()) {
-  <app-login (loggedIn)="loadEntries()" />
+  <app-login (loggedIn)="loadCurrentView()" />
 } @else {
   <header>
     <div class="header-content">
-      <a class="brand" href="#top" aria-label="gestorVP — início">
+      <a class="brand" routerLink="/" (click)="showStock()" aria-label="gestorVP — início">
         <span aria-hidden="true">gVP</span>
         <strong>gestorVP</strong>
       </a>
@@ -72,16 +72,23 @@
         <p class="action-message" role="status">{{ actionMessage() }}</p>
       }
 
-      <app-stock-entry-list
-        [entries]="entries()"
-        [loading]="loading()"
-        [loadingMore]="loadingMore()"
-        [hasMore]="hasMore()"
-        [errorMessage]="errorMessage()"
-        (retryRequested)="loadEntries()"
-        (loadMoreRequested)="loadMore()"
-        (detailsRequested)="openDetails($event)"
-      />
+      <div class="stock-summary">
+        <app-stock-entry-list
+          headingEyebrow="Prioridade no estoque"
+          headingTitle="Produtos que vencem primeiro"
+          [entries]="entries()"
+          [loading]="loading()"
+          [errorMessage]="errorMessage()"
+          (retryRequested)="loadEntries()"
+          (detailsRequested)="openDetails($event)"
+        />
+        @if (!loading() && !errorMessage() && entries().length > 0) {
+          <div class="stock-summary__footer">
+            <p>Mostrando até 5 produtos, por ordem de validade.</p>
+            <button type="button" (click)="showProducts()">Ver todos os produtos</button>
+          </div>
+        }
+      </div>
     } @else if (activeView() === 'products') {
       <form
         class="product-search"
@@ -151,3 +158,5 @@
     />
   }
 }
+
+<router-outlet />
