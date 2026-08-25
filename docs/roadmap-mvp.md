@@ -120,29 +120,65 @@ o bundle Angular `main-FRG2PRMQ.js` contém a nova área **Produtos**.
   **Fique de olho** e **Tudo certo**;
 - [x] mostrar uma mensagem amigável quando não houver resultados.
 
-### 6. Detalhes opcionais
+### 6. Detalhes opcionais — concluído
 
-- adicionar código de barras e categoria ao produto;
-- adicionar custo unitário, fornecedor e número do lote à entrada;
-- manter os campos recolhidos em **Mais detalhes** e todos opcionais;
-- validar unicidade e formato do código de barras;
-- criar a migration Flyway correspondente.
+O PR #22 entregou este incremento com a migration Flyway V7 e testes de
+backend, frontend e Playwright em desktop e celular. O merge `40b55ac` faz
+parte da `main` publicada pelo Railway.
 
-### 7. Início e experiência integrada
+- [x] adicionar código de barras e categoria ao produto;
+- [x] adicionar custo unitário, fornecedor e número do lote à entrada;
+- [x] manter os campos recolhidos em **Mais detalhes** e todos opcionais;
+- [x] validar unicidade e formato do código de barras;
+- [x] criar a migration Flyway correspondente.
 
-- mostrar contagens de entradas por situação;
-- organizar as entradas em quatro grupos de urgência;
-- manter os grupos urgentes expandidos e permitir recolher **Tudo certo**;
-- concluir a navegação com **Início**, **Produtos** e **Histórico**;
-- manter **Adicionar produto** em destaque;
-- validar o fluxo completo em viewport de celular.
+### 7. Início e experiência integrada — concluído
+
+Durante o refinamento do produto, a proposta inicial de contagens e quatro
+grupos recolhíveis foi substituída pelo resumo mais simples definido em
+`docs/produto.md`: uma única lista com até cinco entradas, ordenada por
+validade, e acesso à consulta completa. O PR #25 entregou esse escopo e as URLs
+das seções; o PR #26 concluiu a validação responsiva em desktop, tablet e
+celular. Os merges `6d20197` e `0584042` fazem parte da `main` publicada pelo
+Railway.
+
+- [x] limitar a página inicial às cinco entradas que vencem primeiro;
+- [x] permitir abrir a consulta completa pela ação **Ver todos os produtos**;
+- [x] concluir a navegação com **Início**, **Produtos** e **Histórico**;
+- [x] manter **Adicionar produto** em destaque;
+- [x] sincronizar as seções com as URLs `/`, `/produtos` e `/historico`;
+- [x] confirmar o cadastro com texto e ícone de sucesso;
+- [x] validar o fluxo integrado em desktop, tablet e celular.
 
 ### 8. Fechar e promover o MVP
 
-- cobrir com Playwright login válido e inválido, cadastro básico e completo,
-  classificação, ordenação, busca, filtros, retirada, cancelamento, saldo
-  insuficiente, encerramento e histórico;
-- auditar todos os critérios de HU01–HU05;
+Auditoria realizada em 24/08/2026 contra HU01–HU05, a implementação e as
+suítes automatizadas:
+
+| História | Evidência automatizada existente | Lacuna no Playwright |
+| --- | --- | --- |
+| HU01 | limite de cinco itens, atalho, conteúdo textual, classificação e ordenação cobertos por testes de componente e integração | comprovar classificação, ordenação e os dados exibidos em cada item |
+| HU02 | obrigatoriedade, quantidade positiva, data válida, confirmação com ícone e detalhes opcionais cobertos por componente e integração; cadastro completo coberto pelo Playwright | executar o cadastro básico sem abrir **Mais detalhes** |
+| HU03 | busca parcial normalizada, retorno das entradas ativas e estado vazio cobertos por componente e integração; busca com nome completo e filtro **Tudo certo** coberta pelo Playwright | buscar por parte do nome e exercitar os cinco filtros |
+| HU04 | limites de saldo, atualização atômica, cancelamento, entrada escolhida e restrições de motivo vencido cobertos por componente e integração; retirada com encerramento coberta pelo Playwright | comprovar cancelamento, saldo insuficiente, retirada parcial com atualização imediata e motivos de entrada vencida |
+| HU05 | campos, ordenação recente, paginação e consulta somente leitura cobertos por componente e integração; criação e retirada cobertas pelo Playwright | verificar todos os campos, a ordem e a ausência de ações de alteração |
+
+O Playwright atual também comprova login válido e inválido nos três viewports
+e ausência de overflow em tablet e celular.
+
+O próximo PR deve ampliar somente a cobertura Playwright desses critérios,
+sem remover o aviso de desenvolvimento nem misturar capturas de tela e
+divulgação.
+
+- [ ] cobrir com Playwright cadastro básico;
+- [ ] cobrir classificação e ordenação por validade;
+- [ ] cobrir busca por parte do nome e os cinco filtros de situação;
+- [ ] cobrir retirada parcial, revisão e cancelamento;
+- [ ] cobrir saldo insuficiente sem alteração da quantidade;
+- [ ] cobrir motivos permitidos para entrada vencida;
+- [x] cobrir login válido e inválido, cadastro completo, retirada,
+  encerramento e histórico;
+- [x] auditar todos os critérios de HU01–HU05;
 - executar as revisões de código e segurança;
 - adicionar capturas de tela e credenciais da demonstração ao repositório;
 - remover o aviso de versão em desenvolvimento e divulgar o endereço no
