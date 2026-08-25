@@ -30,7 +30,7 @@ focado, validações automatizadas e as revisões delegadas definidas no
 - registrar as regras acordadas para retirada, busca e detalhes opcionais;
 - manter este roadmap como ordem de referência para os próximos PRs.
 
-### 2. Publicar o primeiro fluxo — validação operacional quase concluída
+### 2. Publicar o primeiro fluxo — concluído
 
 O container está online desde 15/08/2026, com domínio público, healthcheck,
 TLS, migrations V1–V3, **Wait for CI** e **Serverless** configurados. A
@@ -46,8 +46,11 @@ validação operacional confirmou:
   com valores diferentes de `X-Real-IP` enviados pelo cliente;
 - entrada do serviço em repouso após a inatividade.
 
-Resta confirmar que o primeiro acesso após ao menos dez minutos de repouso
-reativa o serviço.
+Em 25/08/2026, a atividade do Railway registrava o deployment em repouso antes
+da validação e a retomada no momento do acesso. Os logs mostram **Starting
+Container** às 08:10:08 BRT e a aplicação iniciada às 08:10:19; a requisição,
+iniciada antes da retomada, respondeu `200` em 14,88 segundos. Com isso, o
+comportamento de cold start do modo Serverless também foi confirmado.
 
 Em 21/08/2026, a infraestrutura foi renomeada para gestorVP: repositório
 `vitaa1/gestor-vp`, projeto e serviço `gestor-vp`, domínio público
@@ -166,10 +169,10 @@ suítes automatizadas:
 O Playwright também comprova login válido nos três viewports, login inválido no
 desktop e ausência de overflow em tablet e celular.
 
-Com a cobertura dos critérios concluída, o próximo PR deve tratar das capturas
-de tela e da apresentação da demonstração. O aviso de desenvolvimento só pode
-ser removido depois das validações finais de produção e do registro das
-limitações operacionais.
+O fechamento foi concluído com capturas de tela, apresentação da demonstração,
+registro das limitações operacionais e remoção do aviso de desenvolvimento. A
+URL pública e os materiais de portfólio não divulgam as credenciais; o acesso
+autenticado permanece sujeito à autorização do responsável pelo projeto.
 
 - [x] cobrir com Playwright cadastro básico;
 - [x] cobrir classificação e ordenação por validade;
@@ -180,10 +183,11 @@ limitações operacionais.
 - [x] cobrir login válido e inválido, cadastro completo, retirada,
   encerramento e histórico;
 - [x] auditar todos os critérios de HU01–HU05;
-- executar as revisões de código e segurança;
-- adicionar capturas de tela e credenciais da demonstração ao repositório;
-- remover o aviso de versão em desenvolvimento e divulgar o endereço no
-  portfólio.
+- [x] executar as revisões de código e segurança;
+- [x] adicionar capturas de tela, apresentação e instruções da demonstração ao
+  repositório;
+- [x] remover o aviso de versão em desenvolvimento e divulgar o endereço e os
+  materiais no repositório.
 
 ## Publicação inicial
 
@@ -203,10 +207,11 @@ protegido por lock transacional ou advisory e só opera em um banco exclusivo
 que possua um marcador persistido de demonstração. Na dúvida, a operação falha
 sem apagar dados; não existe endpoint público de reset.
 
-A credencial compartilhada da demonstração é intencionalmente pública,
-exclusiva e nunca reutilizada. Seu valor ainda é injetado por variável do
-Railway, e o banco contém somente dados sintéticos e descartáveis. Segredos de
-ambientes não demonstrativos permanecem proibidos no repositório.
+A credencial da demonstração é exclusiva desse ambiente, nunca é reutilizada e
+permanece privada por enquanto. Seu valor é injetado por variável do Railway e
+não integra o repositório nem os materiais de portfólio. O banco contém somente
+dados sintéticos e descartáveis, e segredos de ambientes não demonstrativos
+permanecem proibidos no repositório.
 
 A conexão JDBC usa `sslmode=verify-full`, `DefaultJavaSSLFactory`, o hostname
 oficial do Neon e uma cadeia de CA confiável. Flyway recebe credenciais próprias

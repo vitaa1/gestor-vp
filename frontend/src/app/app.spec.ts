@@ -140,6 +140,16 @@ describe('App', () => {
     expect(brand?.querySelector('strong')?.textContent).toBe('gestorVP');
   });
 
+  it('should present the promoted MVP without a development banner', () => {
+    const fixture = TestBed.createComponent(App);
+    fixture.detectChanges();
+
+    expect((fixture.nativeElement as HTMLElement).querySelector('.development-banner')).toBeNull();
+    expect((fixture.nativeElement as HTMLElement).textContent).not.toContain(
+      'Versão em desenvolvimento',
+    );
+  });
+
   it('should show a five-item expiration summary with access to all products', async () => {
     const service = TestBed.inject(StockEntryService);
     const list = vi.spyOn(service, 'list');

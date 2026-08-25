@@ -367,13 +367,16 @@ O MVP estará concluído quando:
 - os fluxos principais possuírem testes automatizados;
 - o projeto puder ser executado localmente com instruções claras;
 - existir uma demonstração publicada com HTTPS e dados restauráveis;
-- o repositório possuir capturas de tela e a credencial intencionalmente
-  pública e exclusiva da demonstração.
+- o repositório possuir capturas de tela, apresentação e instruções de acesso
+  à demonstração.
 
 O primeiro ambiente remoto utiliza uma única implantação de demonstração. A
 promoção pública no portfólio ocorre somente após HU01–HU05 e os testes ponta a
 ponta estarem concluídos. Esse ambiente contém somente dados sintéticos e
-descartáveis; nenhuma credencial ou dado real pode ser reutilizado nele.
+descartáveis; nenhuma credencial ou dado real pode ser reutilizado nele. A URL
+e os materiais visuais podem ser públicos sem que as credenciais sejam
+divulgadas. Enquanto não houver decisão explícita em contrário, o acesso
+autenticado depende de autorização do responsável pelo projeto.
 
 ## 14. Indicadores de simplicidade
 

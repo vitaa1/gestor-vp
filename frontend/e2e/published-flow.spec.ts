@@ -120,7 +120,7 @@ test('completes the inventory and history flow through the published application
 
   await expect(page).toHaveTitle('gestorVP');
   await expect(page.getByText('gestorVP', { exact: true })).toBeVisible();
-  await expect(page.getByText('Versão em desenvolvimento')).toBeVisible();
+  await expect(page.getByText('Versão em desenvolvimento')).toHaveCount(0);
   if (testInfo.project.name === 'desktop-chromium') {
     await page.getByLabel('Usuário').fill(`invalid-operator-${Date.now()}`);
     await page.getByLabel('Senha', { exact: true }).fill('invalid-password');

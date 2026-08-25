@@ -38,7 +38,9 @@ Requests`); um proxy externo poderá assumir essa responsabilidade no futuro.
 
 - Os registros pertencem à implantação, não a usuários individuais.
 - Não há compartilhamento seguro de um banco entre estabelecimentos.
-- A credencial de uma demonstração pública é exclusiva desse ambiente, nunca é
-  reutilizada e não protege dados reais.
+- A credencial de uma demonstração é exclusiva desse ambiente, nunca é
+  reutilizada e não protege dados reais. A URL pode ser pública sem que a
+  credencial seja divulgada; o acesso autenticado depende da política de
+  divulgação vigente.
 - Múltiplos usuários, recuperação de senha e permissões exigirão uma nova
   decisão e evolução do schema antes de serem implementados.

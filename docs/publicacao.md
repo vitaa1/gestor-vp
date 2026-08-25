@@ -129,6 +129,11 @@ Nunca reutilize essas senhas em desenvolvimento ou em outra implantação. O
 Railway fornece HTTPS, injeta `PORT` e encaminha o endereço validado do cliente
 em `X-Real-IP`.
 
+As variáveis `APP_USERNAME` e `APP_PASSWORD` também permanecem somente no
+Railway. A URL e as capturas da demonstração podem ser divulgadas sem publicar
+essas credenciais. Enquanto não houver uma decisão explícita de abertura, o
+login é fornecido apenas a pessoas autorizadas pelo responsável pelo projeto.
+
 O frontend envia automaticamente o fuso IANA informado pelo navegador em cada
 requisição de estoque. `APP_DEFAULT_TIME_ZONE` não substitui essa detecção; ele
 impede que clientes sem o cabeçalho dependam do fuso do servidor e define a
@@ -208,8 +213,8 @@ contornar a transição.
 Após os checks e o deploy concluírem:
 
 1. confirme `200` em `/actuator/health`;
-2. abra a raiz e verifique o aviso de versão em desenvolvimento;
-3. faça login com a credencial da demonstração;
+2. abra a raiz e verifique a página de acesso da demonstração;
+3. como pessoa autorizada, faça login com a credencial privada da demonstração;
 4. confirme os quatro registros sintéticos;
 5. cadastre uma entrada e atualize a página para validar a persistência;
 6. verifique nos logs que as migrations chegaram à versão mais recente e que a
