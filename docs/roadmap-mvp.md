@@ -155,27 +155,28 @@ Railway.
 Auditoria realizada em 24/08/2026 contra HU01–HU05, a implementação e as
 suítes automatizadas:
 
-| História | Evidência automatizada existente | Lacuna no Playwright |
+| História | Evidência automatizada existente | Evidência Playwright |
 | --- | --- | --- |
-| HU01 | limite de cinco itens, atalho, conteúdo textual, classificação e ordenação cobertos por testes de componente e integração | comprovar classificação, ordenação e os dados exibidos em cada item |
-| HU02 | obrigatoriedade, quantidade positiva, data válida, confirmação com ícone e detalhes opcionais cobertos por componente e integração; cadastro completo coberto pelo Playwright | executar o cadastro básico sem abrir **Mais detalhes** |
-| HU03 | busca parcial normalizada, retorno das entradas ativas e estado vazio cobertos por componente e integração; busca com nome completo e filtro **Tudo certo** coberta pelo Playwright | buscar por parte do nome e exercitar os cinco filtros |
-| HU04 | limites de saldo, atualização atômica, cancelamento, entrada escolhida e restrições de motivo vencido cobertos por componente e integração; retirada com encerramento coberta pelo Playwright | comprovar cancelamento, saldo insuficiente, retirada parcial com atualização imediata e motivos de entrada vencida |
-| HU05 | campos, ordenação recente, paginação e consulta somente leitura cobertos por componente e integração; criação e retirada cobertas pelo Playwright | verificar todos os campos, a ordem e a ausência de ações de alteração |
+| HU01 | limite de cinco itens, atalho, conteúdo textual, classificação e ordenação cobertos por testes de componente e integração | comprova limite, atalho, classificação, ordenação e dados textuais nas quatro situações |
+| HU02 | obrigatoriedade, quantidade positiva, data válida, confirmação com ícone e detalhes opcionais cobertos por componente e integração | comprova cadastros básico e completo sem tornar os detalhes obrigatórios |
+| HU03 | busca parcial normalizada, retorno das entradas ativas e estado vazio cobertos por componente e integração | comprova busca por parte do nome, estado vazio e os cinco filtros |
+| HU04 | limites de saldo, atualização atômica, cancelamento, entrada escolhida e restrições de motivo vencido cobertos por componente e integração | comprova cancelamento, concorrência com saldo insuficiente, retirada parcial, atualização imediata, encerramento e motivos de entrada vencida |
+| HU05 | campos, ordenação recente, paginação e consulta somente leitura cobertos por componente e integração | comprova os campos de entradas e retiradas, registros recentes primeiro e ausência de ações de alteração |
 
-O Playwright atual também comprova login válido e inválido nos três viewports
-e ausência de overflow em tablet e celular.
+O Playwright também comprova login válido nos três viewports, login inválido no
+desktop e ausência de overflow em tablet e celular.
 
-O próximo PR deve ampliar somente a cobertura Playwright desses critérios,
-sem remover o aviso de desenvolvimento nem misturar capturas de tela e
-divulgação.
+Com a cobertura dos critérios concluída, o próximo PR deve tratar das capturas
+de tela e da apresentação da demonstração. O aviso de desenvolvimento só pode
+ser removido depois das validações finais de produção e do registro das
+limitações operacionais.
 
-- [ ] cobrir com Playwright cadastro básico;
-- [ ] cobrir classificação e ordenação por validade;
-- [ ] cobrir busca por parte do nome e os cinco filtros de situação;
-- [ ] cobrir retirada parcial, revisão e cancelamento;
-- [ ] cobrir saldo insuficiente sem alteração da quantidade;
-- [ ] cobrir motivos permitidos para entrada vencida;
+- [x] cobrir com Playwright cadastro básico;
+- [x] cobrir classificação e ordenação por validade;
+- [x] cobrir busca por parte do nome e os cinco filtros de situação;
+- [x] cobrir retirada parcial, revisão e cancelamento;
+- [x] cobrir saldo insuficiente sem alteração da quantidade;
+- [x] cobrir motivos permitidos para entrada vencida;
 - [x] cobrir login válido e inválido, cadastro completo, retirada,
   encerramento e histórico;
 - [x] auditar todos os critérios de HU01–HU05;
