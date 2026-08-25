@@ -6,9 +6,9 @@ O **gestorVP** ajuda pequenos mercados, mercearias e comércios de bairro a
 identificar produtos próximos do vencimento e registrar entradas e retiradas
 pelo celular.
 
-O projeto está sendo construído com foco em pessoas com pouca familiaridade
-com tecnologia. Por isso, prioriza linguagem simples, poucos passos e uma
-interface mobile-first.
+O MVP foi construído com foco em pessoas com pouca familiaridade com
+tecnologia. Por isso, prioriza linguagem simples, poucos passos e uma interface
+mobile-first.
 
 ## Problema que o projeto resolve
 
@@ -79,14 +79,31 @@ gestor-vp/
 
 ## Status
 
-🚧 Em desenvolvimento — base técnica executável, cadastro de entradas,
-consulta de detalhes e retirada de unidades publicados no ambiente de
-demonstração.
+✅ MVP concluído — cadastro, classificação por validade, consulta, retirada de
+unidades e histórico estão disponíveis no ambiente de demonstração.
 
 A versão atual está disponível em
 [gestor-vp-production.up.railway.app](https://gestor-vp-production.up.railway.app/).
 Como o serviço usa o modo Serverless do Railway, o primeiro acesso após um
-período de inatividade pode levar alguns segundos.
+período de inatividade pode levar alguns segundos. Em 25/08/2026, um acesso
+após uma janela prolongada sem tráfego respondeu `200` em 14,88 segundos.
+
+As credenciais da demonstração permanecem privadas por enquanto. O endereço e
+a página de acesso são públicos, mas o uso autenticado depende de autorização
+do responsável pelo projeto. A base contém somente dados sintéticos e
+descartáveis e é restaurada após 24 horas.
+
+## Demonstração
+
+| Início | Prioridades |
+| --- | --- |
+| ![Resumo do estoque na página inicial](docs/images/mvp/inicio.png) | ![Produtos ordenados por prioridade](docs/images/mvp/prioridades.png) |
+
+O material completo inclui capturas para desktop e celular, limitações do
+ambiente e uma apresentação pronta para portfólio:
+
+- [guia da demonstração](docs/demonstracao.md);
+- [apresentação do MVP](docs/gestorVP-MVP.pptx).
 
 ## Executar localmente
 

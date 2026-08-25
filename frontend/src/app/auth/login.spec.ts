@@ -26,6 +26,16 @@ describe('Login', () => {
     expect(compiled.querySelector('.eyebrow')?.textContent).toBe('gestorVP');
   });
 
+  it('should warn that the demonstration only accepts disposable synthetic data', () => {
+    const fixture = TestBed.createComponent(Login);
+    fixture.detectChanges();
+    const notice = (fixture.nativeElement as HTMLElement).querySelector('.demo-notice');
+
+    expect(notice?.textContent).toContain('Ambiente de demonstração');
+    expect(notice?.textContent).toContain('Use apenas dados fictícios');
+    expect(notice?.textContent).toContain('restaurado após 24 horas');
+  });
+
   it.each([
     [401, 'Usuário ou senha incorretos.'],
     [429, 'Muitas tentativas de login. Aguarde alguns minutos e tente novamente.'],
