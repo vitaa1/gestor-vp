@@ -88,8 +88,8 @@ da aprovação do CI.
 - [x] abrir uma entrada pela identificação do produto e da validade;
 - [x] mostrar dados completos, quantidades inicial e disponível e situação;
 - [x] confirmar ou cancelar a retirada antes de persistir;
-- [x] aceitar os motivos **Vendi**, **Usei**, **Doei**, **Perdi** e **Venceu**;
-- [x] permitir somente **Perdi** e **Venceu** em entradas vencidas;
+- [x] aceitar os motivos **Venda**, **Uso**, **Doação**, **Perda** e **Vencimento**;
+- [x] permitir somente **Perda** e **Vencimento** em entradas vencidas;
 - [x] rejeitar integralmente retiradas superiores à quantidade disponível;
 - [x] atualizar o saldo atomicamente e registrar uma movimentação imutável.
 

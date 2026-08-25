@@ -59,15 +59,31 @@
 }
 
 .movement-row {
+  --movement-accent: var(--color-primary);
+
   display: grid;
-  grid-template-columns: minmax(10rem, 1.15fr) minmax(24rem, 2fr) auto;
+  grid-template-columns:
+    minmax(13rem, 1.7fr) minmax(6.5rem, 0.8fr) minmax(7rem, 0.9fr)
+    minmax(5.5rem, 0.7fr) minmax(8.5rem, 1.05fr) 7.5rem;
   align-items: center;
   padding: 1rem 1.15rem;
-  gap: 1rem;
+  box-shadow: inset 3px 0 var(--movement-accent);
+  column-gap: clamp(0.65rem, 1.4vw, 1rem);
+}
+
+.movement-row--withdrawal {
+  --movement-accent: var(--color-accent);
 }
 
 .movement-row + .movement-row {
   border-top: 1px solid var(--color-border);
+}
+
+.movement-row__status {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.4rem;
 }
 
 .movement-row__product h3 {
@@ -97,15 +113,16 @@
 }
 
 .closed-label {
-  margin-top: 0.4rem;
+  padding: 0.25rem 0.5rem;
   color: var(--color-muted);
+  background: #edf1f5;
 }
 
 .movement-row__facts {
   display: grid;
-  grid-template-columns: repeat(4, minmax(6rem, 1fr));
+  grid-column: 2 / 6;
+  grid-template-columns: subgrid;
   margin: 0;
-  gap: 0.75rem;
 }
 
 .movement-row__facts div {
@@ -138,7 +155,9 @@
 }
 
 .movement-row__details {
+  width: 100%;
   padding: 0.6rem 0.75rem;
+  white-space: nowrap;
 }
 
 .load-more {
@@ -192,34 +211,56 @@
   outline-offset: 2px;
 }
 
-@media (max-width: 52rem) {
+@media (max-width: 58rem) {
   .movement-row {
     grid-template-columns: 1fr auto;
+    row-gap: 1rem;
   }
 
   .movement-row__facts {
     grid-column: 1 / -1;
     grid-row: 2;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.75rem;
+    padding-top: 0.85rem;
+    border-top: 1px solid var(--color-border);
   }
 }
 
-@media (max-width: 36rem) {
+@media (max-width: 40rem) {
   .history-heading {
     align-items: start;
     flex-direction: column;
   }
 
+  .movement-list {
+    overflow: visible;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+    gap: 0.75rem;
+  }
+
   .movement-row {
     grid-template-columns: 1fr;
+    padding: 1rem;
+    border: 1px solid var(--color-border);
+    border-radius: 0.9rem;
+    background: var(--color-surface);
+    box-shadow:
+      var(--shadow-card),
+      inset 3px 0 var(--movement-accent);
   }
 
   .movement-row__facts {
     grid-column: auto;
     grid-row: auto;
     grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.9rem 0.75rem;
   }
 
   .movement-row__details {
-    width: 100%;
+    min-height: 2.75rem;
   }
 }

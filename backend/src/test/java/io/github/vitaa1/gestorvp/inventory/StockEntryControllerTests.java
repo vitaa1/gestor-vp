@@ -586,7 +586,7 @@ class StockEntryControllerTests {
 						"""))
 			.andExpect(status().isUnprocessableEntity())
 			.andExpect(jsonPath("$.detail")
-				.value("Entradas vencidas aceitam somente os motivos Perdi ou Venceu."));
+				.value("Entradas vencidas aceitam somente os motivos Perda ou Vencimento."));
 
 		mockMvc.perform(post("/api/v1/stock-entries/{entryId}/withdrawals", entryId)
 				.with(operator())

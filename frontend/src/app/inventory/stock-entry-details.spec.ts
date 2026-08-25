@@ -45,7 +45,7 @@ describe('StockEntryDetails', () => {
 
     expect(element.textContent).toContain('Confirme a retirada');
     expect(element.textContent).toContain('3 unidades');
-    expect(element.textContent).toContain('Vendi');
+    expect(element.textContent).toContain('Venda');
     expect(element.querySelector('[aria-live="polite"]')?.textContent).toContain('Revise o resumo');
 
     const emitted = vi.fn();
@@ -82,10 +82,10 @@ describe('StockEntryDetails', () => {
       (option) => option.textContent?.trim(),
     );
 
-    expect(labels).toContain('Perdi');
-    expect(labels).toContain('Venceu');
-    expect(labels).not.toContain('Vendi');
-    expect(labels).not.toContain('Doei');
+    expect(labels).toContain('Perda');
+    expect(labels).toContain('Vencimento');
+    expect(labels).not.toContain('Venda');
+    expect(labels).not.toContain('Doação');
   });
 
   it('keeps a closed entry available without withdrawal controls', () => {

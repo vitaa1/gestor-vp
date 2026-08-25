@@ -1,11 +1,11 @@
 package io.github.vitaa1.gestorvp.inventory;
 
 public enum WithdrawalReason {
-	SOLD("Vendi"),
-	USED("Usei"),
-	DONATED("Doei"),
-	LOST("Perdi"),
-	EXPIRED("Venceu");
+	SOLD("Venda"),
+	USED("Uso"),
+	DONATED("Doação"),
+	LOST("Perda"),
+	EXPIRED("Vencimento");
 
 	private final String label;
 
