@@ -104,7 +104,7 @@ class StockEntry {
 		}
 		if (expirationDate.isBefore(today) && !reason.isAllowedForExpiredEntry()) {
 			throw new InvalidWithdrawalException(
-					"Entradas vencidas aceitam somente os motivos Perdi ou Venceu.");
+					"Entradas vencidas aceitam somente os motivos Perda ou Vencimento.");
 		}
 	}
 

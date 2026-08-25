@@ -197,8 +197,8 @@ A versão publicada permite:
   cursor aparecem após atualizar a lista;
 - abrir uma entrada para consultar produto, validade, situação e quantidades
   inicial e disponível;
-- retirar unidades pelos motivos **Vendi**, **Usei**, **Doei**, **Perdi** ou
-  **Venceu**, depois de revisar e confirmar a operação;
+- retirar unidades pelos motivos **Venda**, **Uso**, **Doação**, **Perda** ou
+  **Vencimento**, depois de revisar e confirmar a operação;
 - encerrar uma entrada quando a quantidade disponível chega a zero;
 - buscar na área **Produtos** por parte do nome, ignorando caixa, acentos e
   espaços excedentes, e combinar a busca com filtros de situação;
@@ -207,7 +207,7 @@ A versão publicada permite:
 - abrir pelo Histórico uma entrada encerrada em modo somente leitura.
 
 Retiradas acima do saldo são rejeitadas integralmente. Para entradas vencidas,
-somente os motivos **Perdi** e **Venceu** ficam disponíveis. Cada retirada
+somente os motivos **Perda** e **Vencimento** ficam disponíveis. Cada retirada
 atualiza o saldo de forma atômica e preserva uma movimentação imutável para o
 histórico. Cada linha do Histórico identifica produto, validade, tipo,
 quantidade, data e hora e, nas retiradas, o motivo aplicável.

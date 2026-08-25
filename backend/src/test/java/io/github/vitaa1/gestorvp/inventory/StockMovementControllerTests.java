@@ -84,7 +84,7 @@ class StockMovementControllerTests {
 			.andExpect(jsonPath("$.content[1].typeLabel").value("Retirada"))
 			.andExpect(jsonPath("$.content[1].quantity").value(5))
 			.andExpect(jsonPath("$.content[1].reason").value("SOLD"))
-			.andExpect(jsonPath("$.content[1].reasonLabel").value("Vendi"))
+			.andExpect(jsonPath("$.content[1].reasonLabel").value("Venda"))
 			.andExpect(jsonPath("$.size").value(2))
 			.andExpect(jsonPath("$.hasNext").value(true))
 			.andExpect(jsonPath("$.nextCursorCreatedAt").isString())

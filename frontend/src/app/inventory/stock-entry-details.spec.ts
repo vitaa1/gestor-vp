@@ -45,7 +45,7 @@ describe('StockEntryDetails', () => {
 
     expect(element.textContent).toContain('Confirme a retirada');
     expect(element.textContent).toContain('3 unidades');
-    expect(element.textContent).toContain('Vendi');
+    expect(element.textContent).toContain('Venda');
     expect(element.querySelector('[aria-live="polite"]')?.textContent).toContain('Revise o resumo');
 
     const emitted = vi.fn();
@@ -82,10 +82,10 @@ describe('StockEntryDetails', () => {
       (option) => option.textContent?.trim(),
     );
 
-    expect(labels).toContain('Perdi');
-    expect(labels).toContain('Venceu');
-    expect(labels).not.toContain('Vendi');
-    expect(labels).not.toContain('Doei');
+    expect(labels).toContain('Perda');
+    expect(labels).toContain('Vencimento');
+    expect(labels).not.toContain('Venda');
+    expect(labels).not.toContain('Doação');
   });
 
   it('keeps a closed entry available without withdrawal controls', () => {
@@ -126,7 +126,7 @@ describe('StockEntryDetails', () => {
     expect(text).toContain('LOTE-2030-A');
   });
 
-  it('opens as a modal dialog and emits close when requested', () => {
+  it('opens as a modal dialog and emits close from the close button', () => {
     const fixture = TestBed.createComponent(StockEntryDetails);
     fixture.componentRef.setInput('entry', activeEntry);
     const closed = vi.fn();
@@ -134,9 +134,29 @@ describe('StockEntryDetails', () => {
     fixture.detectChanges();
 
     const dialog = (fixture.nativeElement as HTMLElement).querySelector('dialog');
+    const closeButton = dialog?.querySelector<HTMLButtonElement>('.close-button');
     expect(dialog?.hasAttribute('open')).toBe(true);
+    expect(closeButton?.getAttribute('aria-label')).toBe('Fechar detalhes');
+    expect(closeButton?.querySelector('svg[aria-hidden="true"]')).not.toBeNull();
 
-    fixture.componentInstance.requestClose();
+    closeButton?.click();
     expect(closed).toHaveBeenCalledOnce();
+  });
+
+  it('disables closing while a withdrawal is pending', () => {
+    const fixture = TestBed.createComponent(StockEntryDetails);
+    fixture.componentRef.setInput('entry', activeEntry);
+    fixture.componentRef.setInput('withdrawalPending', true);
+    const closed = vi.fn();
+    fixture.componentInstance.closeRequested.subscribe(closed);
+    fixture.detectChanges();
+
+    const closeButton = (fixture.nativeElement as HTMLElement).querySelector<HTMLButtonElement>(
+      '.close-button',
+    );
+    expect(closeButton?.disabled).toBe(true);
+
+    closeButton?.click();
+    expect(closed).not.toHaveBeenCalled();
   });
 });

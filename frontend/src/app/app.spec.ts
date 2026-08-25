@@ -55,7 +55,7 @@ const movements: StockMovement[] = [
     typeLabel: 'Retirada',
     quantity: 5,
     reason: 'SOLD',
-    reasonLabel: 'Vendi',
+    reasonLabel: 'Venda',
     createdAt: '2026-08-15T18:30:00Z',
     entryClosed: false,
   },
@@ -182,7 +182,7 @@ describe('App', () => {
     expect(TestBed.inject(Router).url).toBe('/historico');
     expect((fixture.nativeElement as HTMLElement).textContent).toContain('Histórico');
     expect((fixture.nativeElement as HTMLElement).textContent).toContain('Leite Integral');
-    expect((fixture.nativeElement as HTMLElement).textContent).toContain('Vendi');
+    expect((fixture.nativeElement as HTMLElement).textContent).toContain('Venda');
   });
 
   it('should search products by name and expiration status from the primary navigation', async () => {

@@ -33,18 +33,23 @@
       } @else {
         <div class="movement-list" [class.movement-list--with-alert]="errorMessage()">
           @for (movement of movements(); track movement.id) {
-            <article class="movement-row">
+            <article
+              class="movement-row"
+              [class.movement-row--withdrawal]="movement.type === 'WITHDRAWAL'"
+            >
               <div class="movement-row__product">
-                <span
-                  class="movement-type"
-                  [class.movement-type--withdrawal]="movement.type === 'WITHDRAWAL'"
-                >
-                  {{ movement.typeLabel }}
-                </span>
+                <div class="movement-row__status">
+                  <span
+                    class="movement-type"
+                    [class.movement-type--withdrawal]="movement.type === 'WITHDRAWAL'"
+                  >
+                    {{ movement.typeLabel }}
+                  </span>
+                  @if (movement.entryClosed) {
+                    <span class="closed-label">Encerrada</span>
+                  }
+                </div>
                 <h3>{{ movement.productName }}</h3>
-                @if (movement.entryClosed) {
-                  <span class="closed-label">Entrada encerrada</span>
-                }
               </div>
 
               <dl class="movement-row__facts">
@@ -59,12 +64,10 @@
                     {{ movement.quantity === 1 ? 'unidade' : 'unidades' }}
                   </dd>
                 </div>
-                @if (movement.reasonLabel) {
-                  <div>
-                    <dt>Motivo</dt>
-                    <dd>{{ movement.reasonLabel }}</dd>
-                  </div>
-                }
+                <div>
+                  <dt>Motivo</dt>
+                  <dd>{{ movement.reasonLabel || '—' }}</dd>
+                </div>
                 <div>
                   <dt>Data e hora</dt>
                   <dd>
@@ -79,12 +82,13 @@
                 class="movement-row__details"
                 type="button"
                 [attr.aria-label]="
-                  (movement.entryClosed ? 'Consultar entrada encerrada de ' : 'Ver entrada de ') +
-                  movement.productName
+                  (movement.entryClosed
+                    ? 'Ver detalhes da entrada encerrada de '
+                    : 'Ver detalhes da entrada de ') + movement.productName
                 "
                 (click)="detailsRequested.emit(movement.stockEntryId)"
               >
-                {{ movement.entryClosed ? 'Consultar entrada encerrada' : 'Ver entrada' }}
+                Ver detalhes
               </button>
             </article>
           }

@@ -3,7 +3,7 @@ import { expect, Page, test } from '@playwright/test';
 const username = process.env['E2E_USERNAME'] ?? 'operador';
 const password = process.env['E2E_PASSWORD'] ?? 'troque-esta-senha-local';
 
-async function expectMobileLayoutToFit(page: Page): Promise<void> {
+async function expectResponsiveLayoutToFit(page: Page): Promise<void> {
   const layout = await page.evaluate(() => {
     const clientWidth = document.documentElement.clientWidth;
     const overflowingElements = [...document.body.querySelectorAll<HTMLElement>('*')]
@@ -28,6 +28,8 @@ async function expectMobileLayoutToFit(page: Page): Promise<void> {
 test('completes the inventory and history flow through the published application', async ({
   page,
 }, testInfo) => {
+  const isMobile = testInfo.project.name === 'mobile-chromium';
+  const isResponsive = testInfo.project.name !== 'desktop-chromium';
   await page.goto('/');
 
   await expect(page).toHaveTitle('gestorVP');
@@ -44,14 +46,15 @@ test('completes the inventory and history flow through the published application
   await expect(
     page.getByRole('heading', { name: 'O que vence primeiro aparece primeiro.' }),
   ).toBeVisible();
-  if (testInfo.project.name === 'mobile-chromium') {
-    await expectMobileLayoutToFit(page);
+  if (isResponsive) {
+    await expectResponsiveLayoutToFit(page);
   }
 
   const runId = Date.now().toString();
   const productName = `Produto E2E ${testInfo.project.name} ${runId}`;
-  const barcode = `${runId}${testInfo.project.name === 'mobile-chromium' ? '2' : '1'}`;
-  if (testInfo.project.name === 'mobile-chromium') {
+  const projectSuffix = isMobile ? '2' : testInfo.project.name === 'tablet-chromium' ? '3' : '1';
+  const barcode = `${runId}${projectSuffix}`;
+  if (isMobile) {
     const formCardBounds = await page.locator('.form-card').boundingBox();
     const expirationDateBounds = await page.getByLabel('Data de validade').boundingBox();
 
@@ -67,8 +70,8 @@ test('completes the inventory and history flow through the published application
   await page.getByLabel('Data de validade').fill('31122035');
   await expect(page.getByLabel('Data de validade')).toHaveValue('31/12/2035');
   await page.locator('details.optional-details').getByText('Mais detalhes').click();
-  if (testInfo.project.name === 'mobile-chromium') {
-    await expectMobileLayoutToFit(page);
+  if (isResponsive) {
+    await expectResponsiveLayoutToFit(page);
   }
   await page.getByLabel('Código de barras').fill(barcode);
   await page.getByLabel('Categoria').fill('Teste E2E');
@@ -86,8 +89,8 @@ test('completes the inventory and history flow through the published application
   await productSearch.getByRole('button', { name: 'Buscar' }).click();
   const entryCard = page.locator('.entry-card').filter({ hasText: productName });
   await expect(entryCard).toBeVisible();
-  if (testInfo.project.name === 'mobile-chromium') {
-    await expectMobileLayoutToFit(page);
+  if (isResponsive) {
+    await expectResponsiveLayoutToFit(page);
   }
 
   await entryCard.getByRole('button', { name: 'Ver detalhes' }).click();
@@ -97,8 +100,8 @@ test('completes the inventory and history flow through the published application
   await expect(activeDetailsDialog.getByText('R$ 18,75')).toBeVisible();
   await expect(activeDetailsDialog.getByText('Fornecedor E2E')).toBeVisible();
   await expect(activeDetailsDialog.getByText('LOTE-E2E')).toBeVisible();
-  if (testInfo.project.name === 'mobile-chromium') {
-    await expectMobileLayoutToFit(page);
+  if (isResponsive) {
+    await expectResponsiveLayoutToFit(page);
   }
   await page.locator('#withdrawal-quantity').fill('3');
   await page.locator('#withdrawal-reason').selectOption('USED');
@@ -112,14 +115,28 @@ test('completes the inventory and history flow through the published application
   const productMovements = page.locator('.movement-row').filter({ hasText: productName });
   await expect(productMovements).toHaveCount(2);
   await expect(productMovements.first()).toContainText('Retirada');
-  await expect(productMovements.first()).toContainText('Usei');
-  if (testInfo.project.name === 'mobile-chromium') {
-    await expectMobileLayoutToFit(page);
+  await expect(productMovements.first()).toContainText('Uso');
+  if (isResponsive) {
+    await expectResponsiveLayoutToFit(page);
+  }
+  if (testInfo.project.name === 'tablet-chromium') {
+    const factPositions = await productMovements
+      .first()
+      .locator('.movement-row__facts > div')
+      .evaluateAll((facts) =>
+        facts.map((fact) => {
+          const bounds = fact.getBoundingClientRect();
+          return { left: Math.round(bounds.left), top: Math.round(bounds.top) };
+        }),
+      );
+    expect(factPositions).toHaveLength(4);
+    expect(new Set(factPositions.map(({ top }) => top)).size).toBe(1);
+    expect(new Set(factPositions.map(({ left }) => left)).size).toBe(4);
   }
 
   await productMovements
     .first()
-    .getByRole('button', { name: `Consultar entrada encerrada de ${productName}` })
+    .getByRole('button', { name: `Ver detalhes da entrada encerrada de ${productName}` })
     .click();
   const detailsDialog = page.getByRole('dialog');
   await expect(
@@ -127,7 +144,40 @@ test('completes the inventory and history flow through the published application
   ).toBeVisible();
   await expect(detailsDialog.getByRole('heading', { name: productName })).toBeVisible();
   await expect(detailsDialog.getByRole('heading', { name: 'Retirar unidades' })).toHaveCount(0);
-  if (testInfo.project.name === 'mobile-chromium') {
-    await expectMobileLayoutToFit(page);
+  if (isResponsive) {
+    await expectResponsiveLayoutToFit(page);
   }
+
+  const closeButton = detailsDialog.getByRole('button', { name: 'Fechar detalhes' });
+  const iconOffset = await closeButton.evaluate((button) => {
+    const buttonBounds = button.getBoundingClientRect();
+    const iconBounds = button.querySelector('svg')?.getBoundingClientRect();
+    if (!iconBounds) {
+      return null;
+    }
+    return {
+      x: Math.abs(
+        buttonBounds.left + buttonBounds.width / 2 - (iconBounds.left + iconBounds.width / 2),
+      ),
+      y: Math.abs(
+        buttonBounds.top + buttonBounds.height / 2 - (iconBounds.top + iconBounds.height / 2),
+      ),
+    };
+  });
+  expect(iconOffset).not.toBeNull();
+  expect(iconOffset?.x).toBeLessThan(0.5);
+  expect(iconOffset?.y).toBeLessThan(0.5);
+
+  await page.keyboard.press('Tab');
+  await page.keyboard.press('Shift+Tab');
+  await expect(closeButton).toBeFocused();
+  await expect(closeButton).toHaveCSS('outline-width', '3px');
+  await expect(closeButton).toHaveCSS('outline-color', 'rgb(23, 59, 99)');
+
+  await closeButton.hover();
+  await expect(closeButton).toHaveCSS('color', 'rgb(23, 59, 99)');
+  await page.mouse.down();
+  await expect(closeButton).toHaveCSS('background-color', 'rgb(23, 59, 99)');
+  await expect(closeButton).toHaveCSS('color', 'rgb(255, 255, 255)');
+  await page.mouse.up();
 });

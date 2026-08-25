@@ -121,11 +121,11 @@ Exemplo:
 
 O usuário informa a quantidade e um motivo:
 
-- vendi;
-- usei;
-- doei;
-- perdi;
-- venceu.
+- venda;
+- uso;
+- doação;
+- perda;
+- vencimento.
 
 A retirada parte de uma entrada identificada pelo produto e pela validade. A
 quantidade disponível é atualizada e a operação permanece no histórico.
@@ -151,8 +151,8 @@ quantidade, data e motivo quando aplicável.
 12. Uma retirada exibe um resumo antes da confirmação.
 13. Uma retirada é aplicada integralmente ou rejeitada, sem atualização
     parcial quando o saldo é insuficiente.
-14. Entradas vencidas não podem ser retiradas pelos motivos **Vendi** ou
-    **Doei**.
+14. Entradas vencidas não podem ser retiradas pelos motivos **Venda** ou
+    **Doação**.
 15. A busca por nome ignora maiúsculas, minúsculas, acentos e espaços
     excedentes.
 16. O nome normalizado é único; o código de barras também é único quando
@@ -217,7 +217,7 @@ Critérios de aceitação:
 - a operação fica no histórico;
 - é possível cancelar antes da confirmação.
 - a retirada atua sobre a entrada escolhida pelo produto e pela validade;
-- entradas vencidas aceitam apenas os motivos **Perdi** ou **Venceu**.
+- entradas vencidas aceitam apenas os motivos **Perda** ou **Vencimento**.
 
 ### HU05 — Consultar histórico
 

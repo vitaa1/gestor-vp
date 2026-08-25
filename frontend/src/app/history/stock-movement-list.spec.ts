@@ -12,7 +12,7 @@ const movements: StockMovement[] = [
     typeLabel: 'Retirada',
     quantity: 5,
     reason: 'SOLD',
-    reasonLabel: 'Vendi',
+    reasonLabel: 'Venda',
     createdAt: '2026-08-15T18:30:00Z',
     entryClosed: true,
   },
@@ -48,10 +48,12 @@ describe('StockMovementList', () => {
     expect(rows[0].textContent).toContain('10/01/2030');
     expect(rows[0].textContent).toContain('Retirada');
     expect(rows[0].textContent).toContain('5 unidades');
-    expect(rows[0].textContent).toContain('Vendi');
+    expect(rows[0].textContent).toContain('Venda');
     expect(rows[0].textContent).toMatch(/15\/08\/2026.*\d{2}:\d{2}/s);
     expect(rows[1].textContent).toContain('Entrada');
-    expect(rows[1].textContent).not.toContain('Motivo');
+    expect(rows[1].textContent).toContain('Motivo');
+    expect(rows[1].querySelectorAll('.movement-row__facts > div')).toHaveLength(4);
+    expect(rows[1].textContent).toContain('—');
   });
 
   it('opens an entry from its movement and identifies closed entries as read only', () => {
@@ -62,10 +64,11 @@ describe('StockMovementList', () => {
     fixture.detectChanges();
     const element = fixture.nativeElement as HTMLElement;
     const button = element.querySelector(
-      'button[aria-label="Consultar entrada encerrada de Leite Integral"]',
+      'button[aria-label="Ver detalhes da entrada encerrada de Leite Integral"]',
     ) as HTMLButtonElement;
 
-    expect(button.textContent).toContain('Consultar entrada encerrada');
+    expect(button.textContent).toContain('Ver detalhes');
+    expect(element.querySelector('.closed-label')?.textContent).toContain('Encerrada');
     button.click();
     expect(detailsRequested).toHaveBeenCalledWith(1);
   });

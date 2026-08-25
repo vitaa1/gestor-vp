@@ -40,11 +40,11 @@ export class StockEntryDetails implements AfterViewInit {
   });
 
   private readonly allReasons: readonly ReasonOption[] = [
-    { value: 'SOLD', label: 'Vendi' },
-    { value: 'USED', label: 'Usei' },
-    { value: 'DONATED', label: 'Doei' },
-    { value: 'LOST', label: 'Perdi' },
-    { value: 'EXPIRED', label: 'Venceu' },
+    { value: 'SOLD', label: 'Venda' },
+    { value: 'USED', label: 'Uso' },
+    { value: 'DONATED', label: 'Doação' },
+    { value: 'LOST', label: 'Perda' },
+    { value: 'EXPIRED', label: 'Vencimento' },
   ];
 
   readonly availableReasons = computed(() =>
