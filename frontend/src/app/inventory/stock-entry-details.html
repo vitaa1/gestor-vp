@@ -11,13 +11,16 @@
       <h2 id="details-title">{{ entry()?.productName || 'Detalhes' }}</h2>
     </div>
     <button
+      class="close-button"
       type="button"
       autofocus
       aria-label="Fechar detalhes"
       [disabled]="withdrawalPending()"
       (click)="requestClose()"
     >
-      ×
+      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path d="M6 6l12 12M18 6 6 18" />
+      </svg>
     </button>
   </header>
 

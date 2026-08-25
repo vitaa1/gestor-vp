@@ -147,4 +147,37 @@ test('completes the inventory and history flow through the published application
   if (isResponsive) {
     await expectResponsiveLayoutToFit(page);
   }
+
+  const closeButton = detailsDialog.getByRole('button', { name: 'Fechar detalhes' });
+  const iconOffset = await closeButton.evaluate((button) => {
+    const buttonBounds = button.getBoundingClientRect();
+    const iconBounds = button.querySelector('svg')?.getBoundingClientRect();
+    if (!iconBounds) {
+      return null;
+    }
+    return {
+      x: Math.abs(
+        buttonBounds.left + buttonBounds.width / 2 - (iconBounds.left + iconBounds.width / 2),
+      ),
+      y: Math.abs(
+        buttonBounds.top + buttonBounds.height / 2 - (iconBounds.top + iconBounds.height / 2),
+      ),
+    };
+  });
+  expect(iconOffset).not.toBeNull();
+  expect(iconOffset?.x).toBeLessThan(0.5);
+  expect(iconOffset?.y).toBeLessThan(0.5);
+
+  await page.keyboard.press('Tab');
+  await page.keyboard.press('Shift+Tab');
+  await expect(closeButton).toBeFocused();
+  await expect(closeButton).toHaveCSS('outline-width', '3px');
+  await expect(closeButton).toHaveCSS('outline-color', 'rgb(23, 59, 99)');
+
+  await closeButton.hover();
+  await expect(closeButton).toHaveCSS('color', 'rgb(23, 59, 99)');
+  await page.mouse.down();
+  await expect(closeButton).toHaveCSS('background-color', 'rgb(23, 59, 99)');
+  await expect(closeButton).toHaveCSS('color', 'rgb(255, 255, 255)');
+  await page.mouse.up();
 });
